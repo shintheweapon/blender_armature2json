@@ -1,0 +1,20 @@
+# Blender Extension Manifest
+# For Blender 4.2+ extensions platform
+
+schema_version = "1.0.0"
+
+id = "armature2json"
+version = "1.0.0"
+name = "Armature to JSON Exporter"
+tagline = "Merge Blender armature data with Flver Editor JSON export"
+maintainer = "blender_armature2json"
+type = "add-on"
+
+# Supported Blender versions
+blender_version_min = "4.2.0"
+
+# License (SPDX identifier)
+license = ["SPDX:GPL-3.0-or-later"]
+
+# Categories for extension platform
+tags = ["Import-Export", "Animation"]
