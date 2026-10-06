@@ -3,8 +3,7 @@
 A Blender 4.5 extension that writes a FLVER node list (the "Nodes JSON" that FLVER_Editor loads) straight from
 a Blender armature. A vanilla node JSON is not needed.
 
-Status: in development. The coordinate conversion is done; hierarchy, bounding boxes, file output and the
-export menu follow.
+Status: in development. The node list can be built and written from Python; the export menu follows.
 
 ## How bones become nodes
 
@@ -26,6 +25,20 @@ vanilla axes when a vanilla skeleton is round tripped through Blender.
 
 **Rotation.** Stored as Euler angles in radians, applied X, then Z, then Y, as SoulsFormats'
 `FLVER.Node.ComputeLocalTransform` expects.
+
+**Order.** Nodes are listed depth first: each parent comes before its children, and the children of one
+parent keep Blender's order. ParentIndex, FirstChildIndex, NextSiblingIndex and PreviousSiblingIndex are
+computed from that order; root nodes link to each other as siblings, as in vanilla node lists.
+
+**Bounding boxes.** A node's BoundingBoxMin and BoundingBoxMax enclose every vertex weighted to its bone
+(weight above zero), measured in the node's own axes. Only meshes with an Armature modifier that targets the
+armature count, and vertices are taken in their rest position. A node with no weighted vertices gets a zero box.
+
+**Flags.** Every node gets 8 (Bone). Node 0 gets 12 (Mesh and Bone) while "Mark root as mesh node" is on,
+which is the default: FLVER_Editor points every mesh it imports from FBX at node 0.
+
+**File.** One compact line of UTF-8 JSON without a BOM, field names in `FLVER.Node` order, numbers rounded to
+single precision and whole numbers written without decimals, matching files exported by FLVER_Editor.
 
 ## Development
 

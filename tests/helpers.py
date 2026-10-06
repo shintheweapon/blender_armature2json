@@ -46,3 +46,41 @@ def make_armature(bones: Iterable[BoneSpec],
         edit_bones[bone_name] = eb
     bpy.ops.object.mode_set(mode='OBJECT')
     return obj
+
+
+def make_skinned_box(armature_obj: bpy.types.Object, bone_name: str,
+                     size: Tuple[float, float, float],
+                     name: str = 'Box') -> bpy.types.Object:
+    """
+    Create a box mesh from the origin to ``size``, fully weighted to one bone.
+
+    The mesh gets an Armature modifier targeting ``armature_obj`` and one
+    vertex group named ``bone_name`` holding all corners at weight 1.
+
+    Parameters
+    ----------
+    armature_obj : bpy.types.Object
+        Armature the box is skinned to.
+    bone_name : str
+        Bone that receives all the weight.
+    size : tuple of float
+        Box extent along Blender X, Y and Z.
+    name : str
+        Name for the mesh object and data.
+
+    Returns
+    -------
+    bpy.types.Object
+        The mesh object, linked to the scene.
+    """
+    sx, sy, sz = size
+    corners = [(x, y, z) for x in (0.0, sx) for y in (0.0, sy) for z in (0.0, sz)]
+    mesh = bpy.data.meshes.new(name)
+    mesh.from_pydata(corners, [], [])
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.scene.collection.objects.link(obj)
+    group = obj.vertex_groups.new(name=bone_name)
+    group.add(list(range(len(corners))), 1.0, 'REPLACE')
+    modifier = obj.modifiers.new('Armature', 'ARMATURE')
+    modifier.object = armature_obj
+    return obj
