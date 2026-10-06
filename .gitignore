@@ -1,0 +1,11 @@
+# Sample data (large binaries and vanilla node lists, kept locally only)
+*.blend
+*.blend1
+
+# Personal working rules
+rules.md
+
+# Python and build output
+__pycache__/
+*.pyc
+*.zip
