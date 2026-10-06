@@ -1,0 +1,17 @@
+# Blender Extension Manifest (Blender 4.2+ extensions platform)
+
+schema_version = "1.0.0"
+
+id = "flver_node_export"
+version = "0.1.0"
+name = "FLVER Node Exporter"
+tagline = "Export a Blender armature as FLVER node JSON for FLVER_Editor"
+maintainer = "shintheweapon"
+type = "add-on"
+
+# Developed and tested with Blender 4.5
+blender_version_min = "4.5.0"
+
+license = ["SPDX:GPL-3.0-or-later"]
+
+tags = ["Import-Export", "Animation"]

@@ -59,6 +59,34 @@ class EulerTests(unittest.TestCase):
             for row_a, row_e in zip(actual, expected):
                 assert_vectors_close(self, row_a, row_e)
 
+    def test_euler_extraction_is_exact_near_and_at_gimbal_lock(self):
+        # Z close to or at +-90 degrees makes X and Y hard to separate; the
+        # rebuilt rotation must still match the input closely.
+        rng = random.Random(3)
+        for offset in (1e-2, 1e-4, 1e-6, 0.0):
+            for sign in (1, -1):
+                for _ in range(20):
+                    x, y = rng.uniform(-math.pi, math.pi), rng.uniform(-math.pi, math.pi)
+                    z = sign * (math.pi / 2 - offset)
+                    matrix = Euler((x, y, z), 'XZY').to_matrix()
+                    angles = transforms.matrix_to_euler_xzy(matrix)
+                    rebuilt = transforms.euler_xzy_to_rows(angles)
+                    error = max(abs(a - b) for ra, rb in zip(rebuilt, matrix)
+                                for a, b in zip(ra, rb))
+                    self.assertLess(error, 1e-6, (offset, sign, x, y))
+
+    def test_euler_extraction_of_single_precision_rotation_near_gimbal_lock(self):
+        # Root node rotation of a vanilla skeleton imported into Blender: Z is
+        # within 1e-4 of 90 degrees and the matrix carries float32 rounding.
+        # Matrix.to_euler('XZY') rebuilds this with an error near 1e-3.
+        from mathutils import Quaternion
+        quat = Quaternion((2.824298462655861e-05, -0.7071067094802856,
+                           -0.7071068286895752, -2.9529863240895793e-05))
+        matrix = quat.to_matrix()
+        rebuilt = transforms.euler_xzy_to_rows(transforms.matrix_to_euler_xzy(matrix))
+        error = max(abs(a - b) for ra, rb in zip(rebuilt, matrix) for a, b in zip(ra, rb))
+        self.assertLess(error, 1e-6)
+
     def test_local_trs_round_trip(self):
         rng = random.Random(2)
         for _ in range(50):

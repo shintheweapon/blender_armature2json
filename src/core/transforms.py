@@ -1,7 +1,7 @@
 # Transforms between Blender armature space and FLVER node space
 
 import math
-from typing import Optional, Tuple
+from typing import List, Optional, Sequence, Tuple
 
 from mathutils import Matrix, Vector
 
@@ -129,5 +129,81 @@ def local_trs(parent: Optional[Matrix],
     """
     local = child if parent is None else parent.inverted() @ child
     translation, rotation, scale = local.decompose()
-    euler = rotation.to_matrix().to_euler('XZY')
-    return translation, Vector(euler), scale
+    return translation, matrix_to_euler_xzy(rotation.to_matrix()), scale
+
+
+Rows = List[List[float]]
+
+
+def _rows(matrix: Matrix) -> Rows:
+    """Copy a 3x3 mathutils matrix into double precision rows."""
+    return [[float(matrix[r][c]) for c in range(3)] for r in range(3)]
+
+
+def _multiply(a: Rows, b: Rows) -> Rows:
+    """Multiply two 3x3 matrices given as rows."""
+    return [[sum(a[r][k] * b[k][c] for k in range(3)) for c in range(3)]
+            for r in range(3)]
+
+
+def _transpose(a: Rows) -> Rows:
+    """Transpose a 3x3 matrix given as rows."""
+    return [[a[c][r] for c in range(3)] for r in range(3)]
+
+
+def _rotation(axis: str, angle: float) -> Rows:
+    """Rotation about one axis by ``angle`` radians, as rows."""
+    c, s = math.cos(angle), math.sin(angle)
+    if axis == 'X':
+        return [[1.0, 0.0, 0.0], [0.0, c, -s], [0.0, s, c]]
+    if axis == 'Y':
+        return [[c, 0.0, s], [0.0, 1.0, 0.0], [-s, 0.0, c]]
+    return [[c, -s, 0.0], [s, c, 0.0], [0.0, 0.0, 1.0]]
+
+
+def euler_xzy_to_rows(angles: Sequence[float]) -> Rows:
+    """
+    Build the rotation for FLVER Euler angles in double precision.
+
+    Parameters
+    ----------
+    angles : sequence of float
+        Radians (x, y, z), applied X, then Z, then Y.
+
+    Returns
+    -------
+    list of list of float
+        3x3 rotation ``Ry @ Rz @ Rx`` as rows.
+    """
+    x, y, z = angles
+    return _multiply(_rotation('Y', y),
+                     _multiply(_rotation('Z', z), _rotation('X', x)))
+
+
+def matrix_to_euler_xzy(rotation: Matrix) -> Vector:
+    """
+    Split a rotation into FLVER Euler angles, in double precision.
+
+    Z comes from ``atan2`` rather than ``asin`` so it stays accurate close
+    to +-90 degrees, Y follows, and X is read from what remains once Y and Z
+    are removed. Rebuilding the rotation from the result reproduces the
+    input to within rounding, including at gimbal lock.
+
+    Parameters
+    ----------
+    rotation : mathutils.Matrix
+        3x3 rotation matrix.
+
+    Returns
+    -------
+    mathutils.Vector
+        Radians (x, y, z), applied X, then Z, then Y.
+    """
+    m = _rows(rotation)
+    cos_z = math.hypot(m[0][0], m[2][0])
+    z = math.atan2(m[1][0], cos_z)
+    y = math.atan2(-m[2][0], m[0][0]) if cos_z > 1e-12 else 0.0
+    remaining = _multiply(_transpose(_rotation('Z', z)),
+                          _multiply(_transpose(_rotation('Y', y)), m))
+    x = math.atan2(remaining[2][1], remaining[1][1])
+    return Vector((x, y, z))
