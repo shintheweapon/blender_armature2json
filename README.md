@@ -5,9 +5,21 @@ a Blender armature. A vanilla node JSON is not needed.
 
 ## Install
 
-1. Zip the contents of the `src` folder, so that `blender_manifest.toml` sits at the top of the zip.
+1. Build the zip from PowerShell in this folder:
+
+   ```
+   .\build.ps1
+   ```
+
+   It runs Blender's own extension build, writes `dist\flver_node_export-0.1.0.zip` (the name follows `id` and
+   `version` in `src\blender_manifest.toml`), and checks that the zip installs cleanly. If Blender lives
+   elsewhere, pass its path: `.\build.ps1 -Blender "<path to blender.exe>"`. On a machine whose execution
+   policy blocks scripts, run `powershell -ExecutionPolicy Bypass -File build.ps1` instead.
 2. In Blender: Edit > Preferences > Get Extensions, open the menu at the top right, choose "Install from Disk"
    and pick the zip.
+
+Without the script, zip the contents of the `src` folder by hand (not the folder itself, and without the
+`__pycache__` folders), so that `blender_manifest.toml` sits at the top of the zip.
 
 ## Use
 
