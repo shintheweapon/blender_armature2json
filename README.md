@@ -70,12 +70,14 @@ python tools\fix_skeleton_set.py "path\to\model.flver"
 ```
 
 It writes `model.skelfix.flver` next to the input (or to a second path, if given), with every SkeletonSet entry
-rebuilt from its node: parent, first child, next sibling, previous sibling, and the node's own index. Nothing
-else in the file changes, the input is never overwritten, and an existing output file is not replaced. Rename
-the fixed copy to the original name when packing it into the game files.
+rebuilt from its node: parent, first child, next sibling, previous sibling, and the node's own index. When the
+SkeletonSet holds more entries than the FLVER has nodes (left over from a model with more bones), it is shrunk
+to the node count: the extra entries, which point at nodes that no longer exist, are zeroed. Nothing else in the
+file changes, the input is never overwritten, and an existing output file is not replaced. Rename the fixed copy
+to the original name when packing it into the game files.
 
 The tool only needs Python 3. It refuses files it cannot fix safely: big-endian FLVERs, versions without a
-SkeletonSet, a SkeletonSet whose size differs from the node count, and node lists with inconsistent links.
+SkeletonSet, a SkeletonSet with fewer entries than nodes, and node lists with inconsistent links.
 
 ## How bones become nodes
 
