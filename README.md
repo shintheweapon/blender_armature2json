@@ -29,6 +29,8 @@ Without the script, zip the contents of the `src` folder by hand (not the folder
    asks to shift bone weights to the new bone indices.
 4. Import the new meshes with "Import Model" (FBX). FLVER_Editor matches their vertex groups to nodes by name.
 5. Open the "Dummy" window and check each dummy's parent and attach bone (see the warning below).
+6. After the last change in FLVER_Editor, fix the SkeletonSet of the saved FLVER and use the fixed copy (see
+   [Fix the SkeletonSet after Load JSON](#fix-the-skeletonset-after-load-json)).
 
 ### Options
 
@@ -45,10 +47,35 @@ list and, with the weight shift, moves vertex weights to the new indices by node
 references at their old positions:
 
 - each dummy's parent bone and attach bone (hit points, effect points and similar);
-- the node index of any vanilla mesh that stays in the FLVER.
+- the node index of any vanilla mesh that stays in the FLVER;
+- the SkeletonSet, a second copy of the bone hierarchy stored in the FLVER, which FLVER_Editor writes back
+  unchanged.
 
-Point them at the right nodes again in FLVER_Editor after loading the JSON. Meshes imported from FBX afterwards
-point at node 0, which is why "Mark Root as Mesh Node" is on by default.
+Point the dummies and kept meshes at the right nodes again in FLVER_Editor after loading the JSON. Meshes
+imported from FBX afterwards point at node 0, which is why "Mark Root as Mesh Node" is on by default. Rebuild
+the SkeletonSet with the tool described next.
+
+## Fix the SkeletonSet after Load JSON
+
+A FLVER (version `0x2001A` and later) stores the bone hierarchy twice: in the node list and in the SkeletonSet.
+"Load JSON" replaces the node list only, so the SkeletonSet keeps describing the old node order. In a working
+FLVER, every SkeletonSet entry mirrors its node. In a FLVER whose SkeletonSet no longer matched its nodes,
+ERCharacterScale showed the model with vanilla proportions instead of retargeting it; rebuilding the
+SkeletonSet is the fix to test first.
+
+Run the tool on the FLVER saved by FLVER_Editor, after the last edit there:
+
+```
+python tools\fix_skeleton_set.py "path\to\model.flver"
+```
+
+It writes `model.skelfix.flver` next to the input (or to a second path, if given), with every SkeletonSet entry
+rebuilt from its node: parent, first child, next sibling, previous sibling, and the node's own index. Nothing
+else in the file changes, the input is never overwritten, and an existing output file is not replaced. Rename
+the fixed copy to the original name when packing it into the game files.
+
+The tool only needs Python 3. It refuses files it cannot fix safely: big-endian FLVERs, versions without a
+SkeletonSet, a SkeletonSet whose size differs from the node count, and node lists with inconsistent links.
 
 ## How bones become nodes
 
