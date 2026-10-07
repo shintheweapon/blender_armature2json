@@ -213,7 +213,11 @@ def rebuild_skeleton_set(data: bytes, layout: Layout, nodes: Sequence[NodeLinks]
     Rewrite both SkeletonSet halves so each entry mirrors its node.
 
     Entry k becomes (parent, first child, next sibling, previous sibling,
-    NodeIndex k, 0) of node k. Nothing else in the file changes.
+    NodeIndex k, 0) of node k. A half holding more entries than there are
+    nodes is shrunk in place: both counts become the node count and the
+    entries no longer used are zeroed. Readers take exactly ``count``
+    entries from each stored offset (SoulsFormats ``SkeletonSet.cs``), so
+    nothing else in the file moves or changes.
 
     Parameters
     ----------
@@ -232,21 +236,28 @@ def rebuild_skeleton_set(data: bytes, layout: Layout, nodes: Sequence[NodeLinks]
     Raises
     ------
     FlverError
-        If either half holds a different number of entries than there are
-        nodes, or the node links are inconsistent.
+        If either half holds fewer entries than there are nodes (growing
+        would move later sections of the file), or the node links are
+        inconsistent.
     """
-    if layout.base_count != len(nodes) or layout.all_count != len(nodes):
+    count = len(nodes)
+    if layout.base_count < count or layout.all_count < count:
         raise FlverError(
             f"SkeletonSet holds {layout.base_count} base and {layout.all_count} "
-            f"entries for {len(nodes)} nodes; resizing is not supported.")
+            f"entries for {count} nodes; growing it is not supported.")
     problems = check_node_links(nodes)
     if problems:
         raise FlverError("Node links are inconsistent: " + "; ".join(problems[:5]))
     out = bytearray(data)
-    for offset in (layout.base_offset, layout.all_offset):
-        for index in range(len(nodes)):
+    struct.pack_into('<hh', out, layout.skeleton_offset, count, count)
+    for offset, stored in ((layout.base_offset, layout.base_count),
+                           (layout.all_offset, layout.all_count)):
+        for index in range(count):
             at = offset + index * SKELETON_ENTRY_SIZE
             out[at:at + SKELETON_ENTRY_SIZE] = _entry(nodes, index)
+        start = offset + count * SKELETON_ENTRY_SIZE
+        end = offset + stored * SKELETON_ENTRY_SIZE
+        out[start:end] = bytes(end - start)
     return bytes(out)
 
 
@@ -309,13 +320,16 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     except OSError as error:
         print(f"Could not read {source}: {error}")
         return 1
-    if after != {'base': len(nodes), 'all': len(nodes)}:
+    if (after != {'base': len(nodes), 'all': len(nodes)}
+            or (check.base_count, check.all_count) != (len(nodes), len(nodes))):
         print(f"Internal check failed after rewriting: {after}")
         return 1
     with open(target, 'xb') as handle:
         handle.write(fixed)
-    for half in ('base', 'all'):
-        print(f"{half}: {len(nodes) - before[half]} of {len(nodes)} entries rewritten")
+    for half, stored in (('base', layout.base_count), ('all', layout.all_count)):
+        dropped = stored - len(nodes)
+        extra = f", {dropped} unused entries dropped" if dropped else ""
+        print(f"{half}: {len(nodes) - before[half]} of {len(nodes)} entries rewritten{extra}")
     print(f"Every SkeletonSet entry now mirrors its node. Written: {target}")
     return 0
 

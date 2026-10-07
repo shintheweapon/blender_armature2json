@@ -37,13 +37,14 @@ def build_flver(links=LINKS, skeleton=None, version=fix.MIN_VERSION,
         Node links (parent, first child, next sibling, previous sibling).
     skeleton : list of tuple, optional
         SkeletonSet entries (parent, first, next, previous, NodeIndex) for
-        both halves; defaults to deliberately wrong entries.
+        both halves, in any number; defaults to deliberately wrong entries,
+        one per node.
     version : int
         FLVER version field.
     endian : bytes
         Two-byte endian marker.
     base_count, all_count : int, optional
-        Override the stored half sizes.
+        Override the stored half sizes; default to the number of entries.
 
     Returns
     -------
@@ -66,9 +67,10 @@ def build_flver(links=LINKS, skeleton=None, version=fix.MIN_VERSION,
         nodes += node
     skeleton_offset = fix.HEADER_SIZE + len(nodes)
     base_offset = skeleton_offset + fix.SKELETON_HEADER_SIZE
-    all_offset = base_offset + count * fix.SKELETON_ENTRY_SIZE
-    sk_header = struct.pack('<hhII', count if base_count is None else base_count,
-                            count if all_count is None else all_count,
+    stored = len(skeleton)
+    all_offset = base_offset + stored * fix.SKELETON_ENTRY_SIZE
+    sk_header = struct.pack('<hhII', stored if base_count is None else base_count,
+                            stored if all_count is None else all_count,
                             base_offset, all_offset) + bytes(20)
     entries = b''.join(struct.pack('<hhhhii', *entry, 0) for entry in skeleton)
     return bytes(header + nodes) + sk_header + entries + entries + TAIL
@@ -109,6 +111,30 @@ class RebuildTests(unittest.TestCase):
         _, fixed = self.fix(data)
         self.assertEqual(fixed, data)
 
+    def test_larger_skeleton_set_is_shrunk_to_the_node_count(self):
+        # Stale entries, including some pointing past the last node, as left
+        # behind by FLVER_Editor after Load JSON with fewer nodes.
+        stale = [(-1, -1, -1, -1, 6 - i) for i in range(len(LINKS) + 3)]
+        data = build_flver(skeleton=stale)
+        layout, fixed = self.fix(data)
+        count = len(LINKS)
+        self.assertEqual(struct.unpack_from('<hh', fixed, layout.skeleton_offset), (count, count))
+        shrunk = fix.read_layout(fixed)
+        self.assertEqual(fix.mirrored_entries(fixed, shrunk, fix.read_nodes(fixed, shrunk)),
+                         {'base': count, 'all': count})
+        for offset in (layout.base_offset, layout.all_offset):
+            unused = fixed[offset + count * fix.SKELETON_ENTRY_SIZE:
+                           offset + len(stale) * fix.SKELETON_ENTRY_SIZE]
+            self.assertEqual(unused, bytes(len(unused)))
+        # Only the two count fields and the two entry arrays may change
+        counts = range(layout.skeleton_offset, layout.skeleton_offset + 4)
+        arrays = range(layout.base_offset,
+                       layout.all_offset + len(stale) * fix.SKELETON_ENTRY_SIZE)
+        changed = [i for i in range(len(data)) if data[i] != fixed[i]]
+        self.assertTrue(changed)
+        self.assertTrue(all(i in counts or i in arrays for i in changed))
+        self.assertEqual(len(fixed), len(data))
+
 
 class RefusalTests(unittest.TestCase):
 
@@ -123,8 +149,9 @@ class RefusalTests(unittest.TestCase):
     def test_old_version_refused(self):
         self.assert_refused(build_flver(version=0x20014))
 
-    def test_count_mismatch_refused(self):
+    def test_smaller_skeleton_set_refused(self):
         self.assert_refused(build_flver(base_count=len(LINKS) - 1))
+        self.assert_refused(build_flver(skeleton=mirrored()[:-1]))
 
     def test_inconsistent_node_links_refused(self):
         broken = list(LINKS)

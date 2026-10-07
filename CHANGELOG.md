@@ -13,6 +13,7 @@
 - Extension manifest, File > Export > FLVER Nodes JSON (.json), and a "FLVER Nodes" sidebar panel.
 - `build.ps1`, which builds the installable zip with Blender's extension build and checks its layout.
 - `tools/fix_skeleton_set.py`, which rebuilds a FLVER's SkeletonSet from its node list after FLVER_Editor's
-  "Load JSON", writing a fixed copy.
+  "Load JSON", writing a fixed copy. A SkeletonSet larger than the node list is shrunk to the node count, with
+  the unused entries zeroed.
 - Test runner for Blender (`tests/run_tests.py`), unit and end-to-end tests, and a comparison against vanilla
   node JSON files (`tests/check_samples.py`).
