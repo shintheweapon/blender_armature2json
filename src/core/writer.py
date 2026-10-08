@@ -6,7 +6,7 @@ from typing import Dict, Iterable, List, Tuple
 
 import bpy
 
-from . import bounds, hierarchy, merge, transforms
+from . import bounds, files, hierarchy, merge, transforms
 
 FLAG_MESH = 4
 FLAG_BONE = 8
@@ -221,6 +221,10 @@ def write_nodes(filepath: str, nodes: List[dict]) -> None:
     """
     Write a node list as compact JSON, UTF-8 without BOM, as FLVER_Editor does.
 
+    The file is written through a temporary file in the same folder and
+    then moved into place, so a failed export leaves an existing file
+    untouched.
+
     Parameters
     ----------
     filepath : str
@@ -233,5 +237,4 @@ def write_nodes(filepath: str, nodes: List[dict]) -> None:
     OSError
         If the file cannot be written.
     """
-    with open(filepath, 'w', encoding='utf-8', newline='') as handle:
-        json.dump(nodes, handle, separators=(',', ':'))
+    files.write_text_atomic(filepath, json.dumps(nodes, separators=(',', ':')))

@@ -95,6 +95,21 @@ class ExportOperatorTests(unittest.TestCase):
                 bpy.ops.flver_node_export.export(filepath=path)
             self.assertFalse(os.path.exists(path))
 
+    def test_merge_mode_refuses_to_overwrite_the_input(self):
+        with tempfile.TemporaryDirectory() as folder:
+            input_path = self._merge_setup(folder)
+            with open(input_path, 'rb') as handle:
+                before = handle.read()
+            targets = [input_path]
+            if os.name == 'nt':
+                targets.append(input_path.upper())
+            for target in targets:
+                with self.assertRaisesRegex(RuntimeError, 'would overwrite the input JSON'):
+                    bpy.ops.flver_node_export.export(filepath=target)
+            with open(input_path, 'rb') as handle:
+                self.assertEqual(handle.read(), before)
+            self.assertEqual(sorted(os.listdir(folder)), ['input.json'])
+
     def test_new_properties_registered_with_tooltips(self):
         properties = bpy.types.Scene.bl_rna.properties
         for name in ('flver_node_export_mode', 'flver_node_export_input_path',

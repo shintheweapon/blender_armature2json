@@ -5,6 +5,9 @@
 ### Added
 - Plain-Python unit tests in `tests/unit`, run with `uv run pytest` and also by the Blender suite:
   `link_indices` (`test_links.py`) and the SkeletonSet tool (moved from `tests/`).
+- File safety (`src/core/files.py`, tested in `tests/unit/test_files.py`): Merge refuses an output that is the
+  input JSON (same path, another letter case or a link), and every export writes through a temporary file that
+  is moved into place, so a failed export leaves an existing file untouched.
 - Merge of an armature's bones into an input node list: `src/core/merge.py` plans the order and parents
   (plain Python, tested in `tests/unit/test_merge.py`), and `writer.merge_nodes` fills in the values
   (`tests/test_merge_blender.py`). An added bone's values are relative to its parent as written in the output,

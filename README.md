@@ -71,7 +71,8 @@ Root as Mesh Node" is on by default in From Armature mode. Rebuild the SkeletonS
 
 **Kept nodes.** Every input node is copied unchanged: values, box and Flags. Only its index, its parent index
 and its child and sibling links change where needed. Input nodes with no bone in the armature are kept too,
-and the export lists them in a warning.
+and the export lists them in a warning. The input JSON is only read: an output path that names the input file
+(also through another letter case or a link) stops the export with a message.
 
 **Added bones.** Bones the input lacks are added in depth-first order as one block after the last input node
 with Flags 8 or 10 (at the start if there is none), with Flags 8. Their values follow
@@ -158,7 +159,9 @@ armature count, and vertices are taken in their rest position. A node with no we
 Merge mode, input nodes keep their Flags and added bones get 8.
 
 **File.** One compact line of UTF-8 JSON without a BOM, field names in `FLVER.Node` order, numbers rounded to
-single precision and whole numbers written without decimals, matching files exported by FLVER_Editor.
+single precision and whole numbers written without decimals, matching files exported by FLVER_Editor. The file
+is first written to a temporary file in the same folder and then moved into place, so a failed export leaves an
+existing file untouched.
 
 ## Known limits
 
