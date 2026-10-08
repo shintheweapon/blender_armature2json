@@ -17,3 +17,8 @@ package = false
 dev = [
     "pytest>=9.1.1",
 ]
+
+[tool.pytest.ini_options]
+# Plain-Python tests; the Blender suite (tests/run_tests.py) runs these too
+testpaths = ["tests/unit"]
+pythonpath = ["src", "."]

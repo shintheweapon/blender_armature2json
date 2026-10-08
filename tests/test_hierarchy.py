@@ -1,4 +1,5 @@
-# Tests for src.core.hierarchy
+# Tests for src.core.hierarchy that need Blender; link_indices is tested in
+# tests/unit/test_links.py
 
 import unittest
 
@@ -28,27 +29,6 @@ class DepthFirstTests(unittest.TestCase):
         for bone in hierarchy.depth_first_bones(arm.data):
             if bone.parent:
                 self.assertLess(names.index(bone.parent.name), names.index(bone.name))
-
-
-class LinkIndicesTests(unittest.TestCase):
-
-    def test_links_for_branching_tree_with_two_roots(self):
-        #   0 Root ── 1 A ── 2 A1
-        #          └─ 3 B
-        #   4 Loose (second root)
-        links = hierarchy.link_indices([-1, 0, 1, 0, -1])
-        expected = [
-            {'FirstChildIndex': 1, 'NextSiblingIndex': 4, 'PreviousSiblingIndex': -1},
-            {'FirstChildIndex': 2, 'NextSiblingIndex': 3, 'PreviousSiblingIndex': -1},
-            {'FirstChildIndex': -1, 'NextSiblingIndex': -1, 'PreviousSiblingIndex': -1},
-            {'FirstChildIndex': -1, 'NextSiblingIndex': -1, 'PreviousSiblingIndex': 1},
-            {'FirstChildIndex': -1, 'NextSiblingIndex': -1, 'PreviousSiblingIndex': 0},
-        ]
-        self.assertEqual(links, expected)
-
-    def test_parent_after_child_raises(self):
-        with self.assertRaises(ValueError):
-            hierarchy.link_indices([-1, 2, 0])
 
 
 if __name__ == '__main__':

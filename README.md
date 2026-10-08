@@ -130,15 +130,15 @@ Create or update `.venv` from the lock file (uv downloads Python 3.11 if needed)
 uv sync
 ```
 
-Run the tests that need no Blender:
+Run the tests that need no Blender (the pure logic in `tests/unit`, which imports `core.*` from `src`):
 
 ```
-uv run pytest tests\test_fix_skeleton_set.py
+uv run pytest
 ```
 
 ### Tests in Blender
 
-Run the full test suite inside Blender 4.5:
+Run the full test suite inside Blender 4.5. It includes `tests/unit`:
 
 ```
 "blender.exe" -b -P tests\run_tests.py

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0 (unreleased)
+
+### Added
+- Plain-Python unit tests in `tests/unit`, run with `uv run pytest` and also by the Blender suite:
+  `link_indices` (`test_links.py`) and the SkeletonSet tool (moved from `tests/`).
+
+### Changed
+- `src/core/hierarchy.py` imports `bpy` only for type hints, so `link_indices` runs without Blender.
+
 ## 0.1.0 (unreleased)
 
 ### Added

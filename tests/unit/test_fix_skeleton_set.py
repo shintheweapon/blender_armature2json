@@ -8,7 +8,7 @@ import sys
 import tempfile
 import unittest
 
-REPO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if REPO_DIR not in sys.path:
     sys.path.insert(0, REPO_DIR)
 
