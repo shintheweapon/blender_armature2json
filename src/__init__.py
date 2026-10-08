@@ -4,27 +4,27 @@ import bpy
 from bpy.props import BoolProperty, EnumProperty, StringProperty
 
 from . import operators, ui
-from .core import merge, transforms
+from .core import i18n_zh_hans, merge, transforms
 
 _AXIS_ITEMS = [(axis, axis, f"Node {axis} axis") for axis in transforms.AXES]
 
 # Third item of each entry is the tooltip shown in the dropdown
 _MODE_ITEMS = [
     ('ARMATURE', "From Armature",
-     "Build every node from the armature. No input JSON is needed"),
-    ('MERGE', "Merge into Input JSON",
-     "Keep every node of an input JSON (for example a vanilla one from FLVER_Editor) "
+     "Build every node from the armature. No reference JSON is needed"),
+    ('MERGE', "Merge into Reference JSON",
+     "Keep every node of a reference JSON (for example a vanilla one from FLVER_Editor) "
      "and add the armature's bones that it lacks"),
 ]
 
 _REPARENT_ITEMS = [
-    (merge.KEEP_INPUT, "Keep Input Parent",
-     "Keep the input JSON's parent and values. The bone stays where the input put it"),
+    (merge.KEEP_INPUT, "Keep Reference Parent",
+     "Keep the reference JSON's parent and values. The bone stays where it was"),
     (merge.BLENDER_KEEP_PLACEMENT, "Use Blender Parent, Keep Placement",
-     "Use the Blender parent and recompute the bone's values, so it stays where the "
-     "input put it, axes included"),
-    (merge.BLENDER_AS_IS, "Use Blender Parent, Keep Values (old add-on)",
-     "Use the Blender parent but keep the input values relative to the old parent, "
+     "Use the Blender parent and recompute the bone's values, so it stays where it "
+     "was, axes included"),
+    (merge.BLENDER_AS_IS, "Use Blender Parent, Keep Values (Armature2JSON)",
+     "Use the Blender parent but keep the values relative to the old parent, "
      "as the old Armature2JSON add-on did. The bone can move"),
 ]
 
@@ -43,22 +43,23 @@ def register_properties():
         default='ARMATURE',
     )
     bpy.types.Scene.flver_node_export_input_path = StringProperty(
-        name="Input JSON",
-        description="Node JSON to merge into, exported by FLVER_Editor. "
-                    "Its nodes are kept as they are",
+        name="Reference JSON",
+        description="The node JSON used as the reference, usually a vanilla one exported "
+                    "by FLVER_Editor. Its nodes are kept as they are",
         subtype='FILE_PATH',
         default="",
     )
     bpy.types.Scene.flver_node_export_reparent = EnumProperty(
         name="Reparented Bones",
-        description="What to do with bones that are in the input JSON but have a "
-                    "different parent in Blender",
+        description="What to do with bones that are in the reference JSON but have a "
+                    "different parent in Blender (the bone's parent in Blender is not "
+                    "the parent recorded in the reference JSON)",
         items=_REPARENT_ITEMS,
         default=merge.KEEP_INPUT,
     )
     bpy.types.Scene.flver_node_export_length_axis = EnumProperty(
         name="Length Axis",
-        description="Node axis that runs along each bone. Vanilla skeletons use X",
+        description="Node axis that runs along each bone. Vanilla skeletons use the X axis",
         items=_AXIS_ITEMS,
         default=transforms.DEFAULT_LENGTH_AXIS,
     )
@@ -88,7 +89,8 @@ def unregister_properties():
 
 
 def register():
-    """Register the extension's classes, properties and menu entry."""
+    """Register the extension's classes, properties, menu entry and translations."""
+    bpy.app.translations.register(__name__, {'zh_HANS': i18n_zh_hans.table()})
     for cls in classes:
         bpy.utils.register_class(cls)
     register_properties()
@@ -101,3 +103,4 @@ def unregister():
     unregister_properties()
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
+    bpy.app.translations.unregister(__name__)

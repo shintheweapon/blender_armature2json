@@ -6,7 +6,8 @@ from typing import Dict, Iterable, List, Tuple
 
 import bpy
 
-from . import bounds, files, hierarchy, merge, transforms
+from . import bounds, files, hierarchy, merge, messages, transforms
+from .messages import ExportError
 
 FLAG_MESH = 4
 FLAG_BONE = 8
@@ -79,10 +80,10 @@ def build_nodes(armature_obj: bpy.types.Object,
         invalid.
     """
     if armature_obj is None or armature_obj.type != 'ARMATURE':
-        raise ValueError("Select an armature object to export.")
+        raise ExportError(messages.NO_ARMATURE)
     bones = hierarchy.depth_first_bones(armature_obj.data)
     if not bones:
-        raise ValueError(f"Armature '{armature_obj.name}' has no bones.")
+        raise ExportError(messages.NO_BONES, name=armature_obj.name)
 
     axes = transforms.axis_matrix(length_axis, roll_axis)
     index_of = {bone.name: i for i, bone in enumerate(bones)}
@@ -126,21 +127,21 @@ def merge_nodes(armature_obj: bpy.types.Object,
                 roll_axis: str = transforms.DEFAULT_ROLL_AXIS,
                 reparent: str = merge.KEEP_INPUT) -> Tuple[List[dict], merge.MergePlan]:
     """
-    Merge an armature's bones into an input node list.
+    Merge an armature's bones into a reference node list.
 
-    Input nodes are copied unchanged, except their parent and link indices
+    Reference nodes are copied unchanged, except their parent and link indices
     and, for ``BLENDER_KEEP_PLACEMENT``, the values of reparented nodes. Bones
-    the input lacks are added with Flags 8 after the last input node with
-    Flags 8 or 10. An added node's values are relative to its parent as
+    the reference lacks are added with Flags 8 after the last reference node
+    with Flags 8 or 10. An added node's values are relative to its parent as
     written in the output, so it lands where the bone is even when that
-    parent keeps the input's axes.
+    parent keeps the reference's axes.
 
     Parameters
     ----------
     armature_obj : bpy.types.Object
         The armature object whose bones are merged.
     input_nodes : list of dict
-        The input node list, for example a vanilla one from FLVER_Editor.
+        The reference node list, for example a vanilla one from FLVER_Editor.
     length_axis : str
         Node axis along each added bone, one of ``transforms.AXES``.
     roll_axis : str
@@ -157,14 +158,14 @@ def merge_nodes(armature_obj: bpy.types.Object,
     Raises
     ------
     ValueError
-        If the object is not an armature, has no bones, the input is invalid,
+        If the object is not an armature, has no bones, the reference is invalid,
         the axes are invalid, or a node would come before its parent.
     """
     if armature_obj is None or armature_obj.type != 'ARMATURE':
-        raise ValueError("Select an armature object to export.")
+        raise ExportError(messages.NO_ARMATURE)
     bones = hierarchy.depth_first_bones(armature_obj.data)
     if not bones:
-        raise ValueError(f"Armature '{armature_obj.name}' has no bones.")
+        raise ExportError(messages.NO_BONES, name=armature_obj.name)
     plan = merge.plan_merge(
         input_nodes, [(b.name, b.parent.name if b.parent else None) for b in bones],
         reparent)
@@ -202,7 +203,7 @@ def merge_nodes(armature_obj: bpy.types.Object,
             node = copy.deepcopy(input_nodes[ref])
             node['ParentIndex'] = parent
             if i in recompute:
-                # Same place and axes as in the input, relative to the new parent
+                # Same place and axes as in the reference, relative to the new parent
                 world = input_worlds[ref]
                 translation, rotation, scale = transforms.local_trs(parent_world, world)
                 node['Translation'] = _xyz(translation)

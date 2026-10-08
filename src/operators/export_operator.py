@@ -7,7 +7,7 @@ import bpy
 from bpy.props import StringProperty
 from bpy_extras.io_utils import ExportHelper
 
-from ..core import files, writer
+from ..core import files, messages, writer
 
 # Names shown in a report message before the rest go to the system console
 REPORT_NAMES = 5
@@ -59,27 +59,68 @@ def draw_options(layout: bpy.types.UILayout, scene: bpy.types.Scene) -> None:
         layout.prop(scene, "flver_node_export_mark_root_as_mesh")
 
 
-def _names(label: str, names) -> str:
+def _text(template: str, **fields) -> str:
+    """
+    Fill a message template from :mod:`core.messages`, in the interface
+    language when Blender translates reports.
+
+    Parameters
+    ----------
+    template : str
+        One of the templates in :mod:`core.messages`.
+    **fields
+        Values for its named fields.
+
+    Returns
+    -------
+    str
+        The message.
+    """
+    return bpy.app.translations.pgettext_rpt(template).format(**fields)
+
+
+def _names(template: str, names) -> str:
     """
     Format a list of node names for a report, printing all of them.
 
     Parameters
     ----------
-    label : str
-        What the names are, for example "input nodes with no bone".
+    template : str
+        ``messages.REFERENCE_ONLY`` or ``messages.REPARENTED``, with the
+        fields ``count`` and ``names``.
     names : list of str
         Node names.
 
     Returns
     -------
     str
-        ``"<count> <label>: a, b, c, ..."`` with at most ``REPORT_NAMES``
-        names; the full list is printed to the system console.
+        The message with at most ``REPORT_NAMES`` names; the full list is
+        printed to the system console.
     """
-    print(f"FLVER node export, {len(names)} {label}: {', '.join(names)}")
+    print("FLVER node export: " + template.format(count=len(names), names=', '.join(names)))
     shown = ', '.join(names[:REPORT_NAMES])
-    more = ", ... (full list in the system console)" if len(names) > REPORT_NAMES else ""
-    return f"{len(names)} {label}: {shown}{more}"
+    if len(names) > REPORT_NAMES:
+        shown += _text(messages.MORE_IN_CONSOLE)
+    return _text(template, count=len(names), names=shown)
+
+
+def _error_text(error: ValueError) -> str:
+    """
+    Turn an export error into a report message.
+
+    Parameters
+    ----------
+    error : ValueError
+        An :class:`core.messages.ExportError`, or any other ``ValueError``.
+
+    Returns
+    -------
+    str
+        The message from the error's template, or ``str(error)``.
+    """
+    if isinstance(error, messages.ExportError):
+        return _text(error.template, **error.fields)
+    return str(error)
 
 
 class FLVER_NODE_EXPORT_OT_export(bpy.types.Operator, ExportHelper):
@@ -112,33 +153,32 @@ class FLVER_NODE_EXPORT_OT_export(bpy.types.Operator, ExportHelper):
             )
             writer.write_nodes(self.filepath, nodes)
         except ValueError as error:
-            self.report({'ERROR'}, str(error))
+            self.report({'ERROR'}, _error_text(error))
             return {'CANCELLED'}
         except OSError as error:
-            self.report({'ERROR'}, f"Could not write the file: {error}")
+            self.report({'ERROR'}, _text(messages.CANNOT_WRITE, error=error))
             return {'CANCELLED'}
-        self.report({'INFO'}, f"Exported {len(nodes)} nodes from "
-                              f"'{armature_obj.name}' to {self.filepath}")
+        self.report({'INFO'}, _text(messages.EXPORTED, count=len(nodes),
+                                    armature=armature_obj.name, path=self.filepath))
         return {'FINISHED'}
 
     def _merge(self, scene, armature_obj):
-        """Run the Merge into Input JSON mode; see :func:`writer.merge_nodes`."""
+        """Run the Merge into Reference JSON mode; see :func:`writer.merge_nodes`."""
         if not scene.flver_node_export_input_path:
-            self.report({'ERROR'}, "Choose an input JSON to merge into.")
+            self.report({'ERROR'}, _text(messages.CHOOSE_REFERENCE))
             return {'CANCELLED'}
         input_path = bpy.path.abspath(scene.flver_node_export_input_path)
         if files.same_file(self.filepath, input_path):
-            self.report({'ERROR'}, "The output would overwrite the input JSON. "
-                                   "Choose another file name.")
+            self.report({'ERROR'}, _text(messages.WOULD_OVERWRITE))
             return {'CANCELLED'}
         try:
             with open(input_path, encoding='utf-8-sig') as handle:
                 input_nodes = json.load(handle)
         except OSError as error:
-            self.report({'ERROR'}, f"Could not read the input JSON: {error}")
+            self.report({'ERROR'}, _text(messages.CANNOT_READ, error=error))
             return {'CANCELLED'}
         except json.JSONDecodeError as error:
-            self.report({'ERROR'}, f"The input JSON is not valid JSON: {error}")
+            self.report({'ERROR'}, _text(messages.NOT_JSON, error=error))
             return {'CANCELLED'}
         try:
             nodes, plan = writer.merge_nodes(
@@ -149,21 +189,19 @@ class FLVER_NODE_EXPORT_OT_export(bpy.types.Operator, ExportHelper):
             )
             writer.write_nodes(self.filepath, nodes)
         except ValueError as error:
-            self.report({'ERROR'}, str(error))
+            self.report({'ERROR'}, _error_text(error))
             return {'CANCELLED'}
         except OSError as error:
-            self.report({'ERROR'}, f"Could not write the file: {error}")
+            self.report({'ERROR'}, _text(messages.CANNOT_WRITE, error=error))
             return {'CANCELLED'}
         if plan.input_only:
-            self.report({'WARNING'}, _names("input nodes with no bone, kept as they are",
-                                            plan.input_only))
+            self.report({'WARNING'}, _names(messages.REFERENCE_ONLY, plan.input_only))
         if plan.reparented:
-            self.report({'WARNING'}, _names("bones with another parent in Blender",
-                                            plan.reparented))
-        self.report({'INFO'}, f"Merged {len(plan.added)} bones from "
-                              f"'{armature_obj.name}' into {len(input_nodes)} input nodes "
-                              f"(inserted at {plan.insertion}); wrote {len(nodes)} nodes "
-                              f"to {self.filepath}")
+            self.report({'WARNING'}, _names(messages.REPARENTED, plan.reparented))
+        self.report({'INFO'}, _text(messages.MERGED, added=len(plan.added),
+                                    armature=armature_obj.name, inputs=len(input_nodes),
+                                    insertion=plan.insertion, count=len(nodes),
+                                    path=self.filepath))
         return {'FINISHED'}
 
 

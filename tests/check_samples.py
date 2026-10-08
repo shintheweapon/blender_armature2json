@@ -1,6 +1,6 @@
 # Compares the exporter's output on a sample .blend with the vanilla node JSON
 # saved next to it (same file name, .json), in both modes: From Armature, and
-# Merge into Input JSON with some leaf nodes dropped. Run inside Blender:
+# Merge into Reference JSON with some leaf nodes dropped. Run inside Blender:
 #   blender.exe -b sample.blend -P tests/check_samples.py
 
 import json

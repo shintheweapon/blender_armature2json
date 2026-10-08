@@ -7,11 +7,11 @@ from ..operators import draw_options, find_armature
 
 class FLVER_NODE_EXPORT_PT_main(bpy.types.Panel):
     """Export options and button in the 3D Viewport sidebar"""
-    bl_label = "FLVER Node Export"
+    bl_label = "FLVER Bone Node Export"
     bl_idname = "FLVER_NODE_EXPORT_PT_main"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = "FLVER Nodes"
+    bl_category = "FLVER Bone Nodes"
 
     def draw(self, context):
         layout = self.layout
@@ -23,7 +23,10 @@ class FLVER_NODE_EXPORT_PT_main(bpy.types.Panel):
             box.alert = True
             box.label(text="No armature in the scene", icon='ERROR')
         else:
-            box.label(text=f"Armature: {armature_obj.name}", icon='ARMATURE_DATA')
+            # Formatted text: translate the template, then fill it in
+            text = bpy.app.translations.pgettext_iface("Armature: {name}")
+            box.label(text=text.format(name=armature_obj.name), icon='ARMATURE_DATA',
+                      translate=False)
 
         draw_options(layout, scene)
 
