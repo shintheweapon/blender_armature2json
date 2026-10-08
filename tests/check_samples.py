@@ -10,44 +10,20 @@ import tempfile
 from typing import Dict, List, Optional
 
 import bpy
-from mathutils import Euler, Matrix, Vector
+from mathutils import Matrix
 
 REPO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO_DIR not in sys.path:
     sys.path.insert(0, REPO_DIR)
 
 from src.core import writer  # noqa: E402
+from src.core.transforms import world_matrices  # noqa: E402
 from src.operators import find_armature  # noqa: E402
 
 TOLERANCE = 1e-4
 CORE_BONES = ('L_Clavicle', 'R_Clavicle', 'L_UpperArm', 'R_UpperArm',
               'L_Forearm', 'R_Forearm', 'L_Thigh', 'R_Thigh', 'Neck',
               'L_Finger1', 'R_Finger1')
-
-
-def world_matrices(nodes: List[dict]) -> List[Matrix]:
-    """
-    Rebuild each node's FLVER-space matrix from its local fields.
-
-    Parameters
-    ----------
-    nodes : list of dict
-        Node list with parents before children.
-
-    Returns
-    -------
-    list of mathutils.Matrix
-        World matrix per node.
-    """
-    worlds: List[Matrix] = []
-    for node in nodes:
-        t, r, s = (node[key] for key in ('Translation', 'Rotation', 'Scale'))
-        local = Matrix.LocRotScale(Vector((t['X'], t['Y'], t['Z'])),
-                                   Euler((r['X'], r['Y'], r['Z']), 'XZY'),
-                                   Vector((s['X'], s['Y'], s['Z'])))
-        parent = node['ParentIndex']
-        worlds.append(worlds[parent] @ local if parent >= 0 else local)
-    return worlds
 
 
 def box(node: dict) -> List[List[float]]:

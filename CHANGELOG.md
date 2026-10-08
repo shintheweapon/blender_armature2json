@@ -5,9 +5,15 @@
 ### Added
 - Plain-Python unit tests in `tests/unit`, run with `uv run pytest` and also by the Blender suite:
   `link_indices` (`test_links.py`) and the SkeletonSet tool (moved from `tests/`).
+- Merge of an armature's bones into an input node list: `src/core/merge.py` plans the order and parents
+  (plain Python, tested in `tests/unit/test_merge.py`), and `writer.merge_nodes` fills in the values
+  (`tests/test_merge_blender.py`). An added bone's values are relative to its parent as written in the output,
+  so it lands where the bone is even when that parent keeps the input's axes.
 
 ### Changed
 - `src/core/hierarchy.py` imports `bpy` only for type hints, so `link_indices` runs without Blender.
+- `world_matrices` moved from `tests/check_samples.py` to `src/core/transforms.py`, with a new
+  `node_local_matrix`.
 
 ## 0.1.0 (unreleased)
 
