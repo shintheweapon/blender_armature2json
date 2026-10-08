@@ -7,7 +7,7 @@ import bpy
 from bpy.props import StringProperty
 from bpy_extras.io_utils import ExportHelper
 
-from ..core import writer
+from ..core import files, writer
 
 # Names shown in a report message before the rest go to the system console
 REPORT_NAMES = 5
@@ -127,6 +127,10 @@ class FLVER_NODE_EXPORT_OT_export(bpy.types.Operator, ExportHelper):
             self.report({'ERROR'}, "Choose an input JSON to merge into.")
             return {'CANCELLED'}
         input_path = bpy.path.abspath(scene.flver_node_export_input_path)
+        if files.same_file(self.filepath, input_path):
+            self.report({'ERROR'}, "The output would overwrite the input JSON. "
+                                   "Choose another file name.")
+            return {'CANCELLED'}
         try:
             with open(input_path, encoding='utf-8-sig') as handle:
                 input_nodes = json.load(handle)
