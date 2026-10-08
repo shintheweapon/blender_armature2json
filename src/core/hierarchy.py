@@ -1,11 +1,13 @@
 # Node order and hierarchy links
 
-from typing import Dict, List
+from typing import TYPE_CHECKING, Dict, List
 
-import bpy
+if TYPE_CHECKING:
+    # Only for type hints, so link_indices imports without Blender
+    import bpy
 
 
-def depth_first_bones(armature: bpy.types.Armature) -> List[bpy.types.Bone]:
+def depth_first_bones(armature: 'bpy.types.Armature') -> List['bpy.types.Bone']:
     """
     List an armature's bones depth first, following Blender's child order.
 
@@ -22,7 +24,7 @@ def depth_first_bones(armature: bpy.types.Armature) -> List[bpy.types.Bone]:
     list of bpy.types.Bone
         All bones of the armature.
     """
-    ordered: List[bpy.types.Bone] = []
+    ordered: List['bpy.types.Bone'] = []
     stack = [b for b in armature.bones if b.parent is None][::-1]
     while stack:
         bone = stack.pop()

@@ -1,11 +1,12 @@
 # Build FLVER node dictionaries and write them as JSON
 
+import copy
 import json
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, List, Tuple
 
 import bpy
 
-from . import bounds, hierarchy, transforms
+from . import bounds, hierarchy, merge, transforms
 
 FLAG_MESH = 4
 FLAG_BONE = 8
@@ -117,6 +118,103 @@ def build_nodes(armature_obj: bpy.types.Object,
             'Flags': flags,
         })
     return nodes
+
+
+def merge_nodes(armature_obj: bpy.types.Object,
+                input_nodes: List[dict],
+                length_axis: str = transforms.DEFAULT_LENGTH_AXIS,
+                roll_axis: str = transforms.DEFAULT_ROLL_AXIS,
+                reparent: str = merge.KEEP_INPUT) -> Tuple[List[dict], merge.MergePlan]:
+    """
+    Merge an armature's bones into an input node list.
+
+    Input nodes are copied unchanged, except their parent and link indices
+    and, for ``BLENDER_KEEP_PLACEMENT``, the values of reparented nodes. Bones
+    the input lacks are added with Flags 8 after the last input node with
+    Flags 8 or 10. An added node's values are relative to its parent as
+    written in the output, so it lands where the bone is even when that
+    parent keeps the input's axes.
+
+    Parameters
+    ----------
+    armature_obj : bpy.types.Object
+        The armature object whose bones are merged.
+    input_nodes : list of dict
+        The input node list, for example a vanilla one from FLVER_Editor.
+    length_axis : str
+        Node axis along each added bone, one of ``transforms.AXES``.
+    roll_axis : str
+        Node axis that each added bone's Z axis becomes.
+    reparent : str
+        One of ``merge.REPARENT_CHOICES``.
+
+    Returns
+    -------
+    tuple
+        ``(nodes, plan)``: the merged node list, and the
+        :class:`merge.MergePlan` with the lists for the report.
+
+    Raises
+    ------
+    ValueError
+        If the object is not an armature, has no bones, the input is invalid,
+        the axes are invalid, or a node would come before its parent.
+    """
+    if armature_obj is None or armature_obj.type != 'ARMATURE':
+        raise ValueError("Select an armature object to export.")
+    bones = hierarchy.depth_first_bones(armature_obj.data)
+    if not bones:
+        raise ValueError(f"Armature '{armature_obj.name}' has no bones.")
+    plan = merge.plan_merge(
+        input_nodes, [(b.name, b.parent.name if b.parent else None) for b in bones],
+        reparent)
+
+    axes = transforms.axis_matrix(length_axis, roll_axis)
+    bone_by_name = {bone.name: bone for bone in bones}
+    points = bounds.weighted_points(bounds.skinned_meshes(armature_obj), plan.added)
+    input_worlds = transforms.world_matrices(input_nodes)
+    recompute = set(plan.recompute)
+
+    worlds = []
+    nodes = []
+    for i, (kind, ref) in enumerate(plan.sources):
+        parent = plan.parents[i]
+        parent_world = worlds[parent] if parent >= 0 else None
+        if kind == 'added':
+            world = transforms.node_matrix(armature_obj.matrix_world,
+                                           bone_by_name[ref].matrix_local, axes)
+            translation, rotation, scale = transforms.local_trs(parent_world, world)
+            box_min, box_max = bounds.bounding_box(world, points.get(ref, []))
+            node = {
+                'Name': ref,
+                'ParentIndex': parent,
+                'FirstChildIndex': -1,
+                'NextSiblingIndex': -1,
+                'PreviousSiblingIndex': -1,
+                'Translation': _xyz(translation),
+                'Rotation': _xyz(rotation),
+                'Scale': _xyz(scale),
+                'BoundingBoxMin': _xyz(box_min),
+                'BoundingBoxMax': _xyz(box_max),
+                'Flags': FLAG_BONE,
+            }
+        else:
+            node = copy.deepcopy(input_nodes[ref])
+            node['ParentIndex'] = parent
+            if i in recompute:
+                # Same place and axes as in the input, relative to the new parent
+                world = input_worlds[ref]
+                translation, rotation, scale = transforms.local_trs(parent_world, world)
+                node['Translation'] = _xyz(translation)
+                node['Rotation'] = _xyz(rotation)
+                node['Scale'] = _xyz(scale)
+            else:
+                local = transforms.node_local_matrix(node)
+                world = parent_world @ local if parent_world is not None else local
+        node.update(plan.links[i])
+        nodes.append(node)
+        worlds.append(world)
+    return nodes, plan
 
 
 def write_nodes(filepath: str, nodes: List[dict]) -> None:

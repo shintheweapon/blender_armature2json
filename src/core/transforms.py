@@ -3,7 +3,7 @@
 import math
 from typing import List, Optional, Sequence, Tuple
 
-from mathutils import Matrix, Vector
+from mathutils import Euler, Matrix, Vector
 
 # Choices for the length axis and roll axis options, in display order
 AXES = ('X', 'Y', 'Z', '-X', '-Y', '-Z')
@@ -130,6 +130,49 @@ def local_trs(parent: Optional[Matrix],
     local = child if parent is None else parent.inverted() @ child
     translation, rotation, scale = local.decompose()
     return translation, matrix_to_euler_xzy(rotation.to_matrix()), scale
+
+
+def node_local_matrix(node: dict) -> Matrix:
+    """
+    Build a node's matrix relative to its parent from its stored fields.
+
+    Parameters
+    ----------
+    node : dict
+        FLVER node with ``Translation``, ``Rotation`` (Euler radians, applied
+        X, then Z, then Y) and ``Scale``.
+
+    Returns
+    -------
+    mathutils.Matrix
+        4x4 local matrix.
+    """
+    t, r, s = (node[key] for key in ('Translation', 'Rotation', 'Scale'))
+    return Matrix.LocRotScale(Vector((t['X'], t['Y'], t['Z'])),
+                              Euler((r['X'], r['Y'], r['Z']), 'XZY'),
+                              Vector((s['X'], s['Y'], s['Z'])))
+
+
+def world_matrices(nodes: List[dict]) -> List[Matrix]:
+    """
+    Rebuild each node's FLVER-space matrix from its local fields.
+
+    Parameters
+    ----------
+    nodes : list of dict
+        Node list with parents before children.
+
+    Returns
+    -------
+    list of mathutils.Matrix
+        World matrix per node.
+    """
+    worlds: List[Matrix] = []
+    for node in nodes:
+        local = node_local_matrix(node)
+        parent = node['ParentIndex']
+        worlds.append(worlds[parent] @ local if parent >= 0 else local)
+    return worlds
 
 
 Rows = List[List[float]]
