@@ -5,6 +5,8 @@ import os
 import sys
 import unittest
 
+import bpy
+
 TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_DIR = os.path.dirname(TESTS_DIR)
 SRC_DIR = os.path.join(REPO_DIR, 'src')
@@ -25,6 +27,9 @@ def main() -> int:
     for path in (REPO_DIR, TESTS_DIR, SRC_DIR):
         if path not in sys.path:
             sys.path.insert(0, path)
+    # Tests check English messages; force English for this run (background
+    # Blender does not save preferences)
+    bpy.context.preferences.view.language = 'en_US'
     loader = unittest.defaultTestLoader
     suite = unittest.TestSuite([
         loader.discover(TESTS_DIR, pattern='test_*.py'),

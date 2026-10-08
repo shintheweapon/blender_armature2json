@@ -39,7 +39,7 @@ class ExportOperatorTests(unittest.TestCase):
         self.assertEqual(nodes[1]['Translation'], {'X': 1, 'Y': 0, 'Z': 0})
 
     def _merge_setup(self, folder):
-        """An armature with a Cloth bone, and an input JSON that lacks it."""
+        """An armature with a Cloth bone, and a reference JSON that lacks it."""
         arm = helpers.make_armature([
             ('Root', None, (0, 0, 0), (0, 1, 0), 0.0),
             ('Tip', 'Root', (0, 1, 0), (0, 2, 0), 0.0),
@@ -74,7 +74,7 @@ class ExportOperatorTests(unittest.TestCase):
             self._merge_setup(folder)
             bpy.context.scene.flver_node_export_input_path = ''
             path = os.path.join(folder, 'out.json')
-            with self.assertRaisesRegex(RuntimeError, 'Choose an input JSON'):
+            with self.assertRaisesRegex(RuntimeError, 'Choose a reference JSON'):
                 bpy.ops.flver_node_export.export(filepath=path)
             self.assertFalse(os.path.exists(path))
 
@@ -91,7 +91,7 @@ class ExportOperatorTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'not valid JSON'):
                 bpy.ops.flver_node_export.export(filepath=path)
             bpy.context.scene.flver_node_export_input_path = os.path.join(folder, 'missing.json')
-            with self.assertRaisesRegex(RuntimeError, 'Could not read the input JSON'):
+            with self.assertRaisesRegex(RuntimeError, 'Could not read the reference JSON'):
                 bpy.ops.flver_node_export.export(filepath=path)
             self.assertFalse(os.path.exists(path))
 
@@ -104,7 +104,7 @@ class ExportOperatorTests(unittest.TestCase):
             if os.name == 'nt':
                 targets.append(input_path.upper())
             for target in targets:
-                with self.assertRaisesRegex(RuntimeError, 'would overwrite the input JSON'):
+                with self.assertRaisesRegex(RuntimeError, 'would overwrite the reference JSON'):
                     bpy.ops.flver_node_export.export(filepath=target)
             with open(input_path, 'rb') as handle:
                 self.assertEqual(handle.read(), before)

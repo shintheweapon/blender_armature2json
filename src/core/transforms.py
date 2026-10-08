@@ -5,6 +5,9 @@ from typing import List, Optional, Sequence, Tuple
 
 from mathutils import Euler, Matrix, Vector
 
+from . import messages
+from .messages import ExportError
+
 # Choices for the length axis and roll axis options, in display order
 AXES = ('X', 'Y', 'Z', '-X', '-Y', '-Z')
 
@@ -53,13 +56,11 @@ def axis_matrix(length_axis: str = DEFAULT_LENGTH_AXIS,
     """
     for name in (length_axis, roll_axis):
         if name not in _AXIS_VECTORS:
-            raise ValueError(f"Unknown axis '{name}'. Expected one of {AXES}.")
+            raise ExportError(messages.UNKNOWN_AXIS, name=name, axes=str(AXES))
     along = _AXIS_VECTORS[length_axis]
     roll = _AXIS_VECTORS[roll_axis]
     if abs(along.dot(roll)) > 0.5:
-        raise ValueError(
-            f"Length axis '{length_axis}' and roll axis '{roll_axis}' "
-            "must be different lines.")
+        raise ExportError(messages.SAME_LINE_AXES, length=length_axis, roll=roll_axis)
 
     # Rotation taking bone coordinates to node coordinates:
     # bone Y -> along, bone Z -> roll, bone X = Y x Z -> along x roll
