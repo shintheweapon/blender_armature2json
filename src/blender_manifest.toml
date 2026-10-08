@@ -3,7 +3,7 @@
 schema_version = "1.0.0"
 
 id = "flver_node_export"
-version = "0.1.0"
+version = "0.2.0"
 name = "FLVER Node Exporter"
 tagline = "Export a Blender armature as FLVER node JSON for FLVER_Editor"
 maintainer = "shintheweapon"

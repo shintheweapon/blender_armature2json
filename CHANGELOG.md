@@ -14,8 +14,13 @@
   Placement; Use Blender Parent, Keep Values as the old Armature2JSON add-on did). Every option and choice has
   a tooltip. Merge reports the number of added bones and warns about input nodes with no bone and about
   reparented bones.
+- `tests/check_samples.py` also checks Merge into Input JSON: it drops leaf nodes from the vanilla list, merges
+  the armature back in, and compares the kept and re-added nodes with vanilla.
+- README: the two modes, a "Merge into Input JSON" section with the reparent choices and the differences from
+  the old Armature2JSON add-on.
 
 ### Changed
+- Version 0.2.0 (`src/blender_manifest.toml`, `pyproject.toml`).
 - `src/core/hierarchy.py` imports `bpy` only for type hints, so `link_indices` runs without Blender.
 - `world_matrices` moved from `tests/check_samples.py` to `src/core/transforms.py`, with a new
   `node_local_matrix`.

@@ -4,6 +4,8 @@
 import copy
 import unittest
 
+import bpy
+
 import helpers
 from src.core import merge, transforms, writer
 
@@ -82,26 +84,29 @@ class MergeNodesTests(unittest.TestCase):
                          by_name(self.full)['Cloth']['BoundingBoxMax'])
 
     def _reparented_input(self):
-        # Input says Hand is a child of UpperArm; Blender says Forearm
+        # README example: the input has Hand under Forearm; in Blender, Hand
+        # is moved under UpperArm
         partial = copy.deepcopy(self.full)
+        bpy.context.view_layer.objects.active = self.arm
+        bpy.ops.object.mode_set(mode='EDIT')
+        edit_bones = self.arm.data.edit_bones
+        edit_bones['Hand'].parent = edit_bones['UpperArm']
+        bpy.ops.object.mode_set(mode='OBJECT')
         index = {n['Name']: i for i, n in enumerate(partial)}
-        partial[index['Hand']]['ParentIndex'] = index['UpperArm']
         return partial, index
 
-    def test_keep_input_parent_reports_and_keeps_values(self):
+    def test_keep_input_parent_reports_and_keeps_node(self):
         partial, index = self._reparented_input()
         nodes, plan = writer.merge_nodes(self.arm, copy.deepcopy(partial))
         self.assertEqual(plan.reparented, ['Hand'])
-        self.assertEqual(nodes[index['Hand']], partial[index['Hand']] | {
-            k: nodes[index['Hand']][k] for k in
-            ('FirstChildIndex', 'NextSiblingIndex', 'PreviousSiblingIndex')})
+        self.assertEqual(nodes[index['Hand']], partial[index['Hand']])
 
     def test_blender_parent_keep_placement_keeps_world_matrix(self):
         partial, index = self._reparented_input()
         before = transforms.world_matrices(partial)[index['Hand']]
         nodes, _ = writer.merge_nodes(self.arm, partial,
                                       reparent=merge.BLENDER_KEEP_PLACEMENT)
-        self.assertEqual(nodes[index['Hand']]['ParentIndex'], index['Forearm'])
+        self.assertEqual(nodes[index['Hand']]['ParentIndex'], index['UpperArm'])
         after = transforms.world_matrices(nodes)[index['Hand']]
         for r in range(4):
             for c in range(4):
@@ -111,6 +116,7 @@ class MergeNodesTests(unittest.TestCase):
         partial, index = self._reparented_input()
         before = transforms.world_matrices(partial)[index['Hand']]
         nodes, _ = writer.merge_nodes(self.arm, partial, reparent=merge.BLENDER_AS_IS)
+        self.assertEqual(nodes[index['Hand']]['ParentIndex'], index['UpperArm'])
         self.assertEqual(nodes[index['Hand']]['Translation'],
                          partial[index['Hand']]['Translation'])
         after = transforms.world_matrices(nodes)[index['Hand']]
