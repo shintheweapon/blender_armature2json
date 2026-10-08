@@ -9,3 +9,7 @@ rules.md
 __pycache__/
 *.pyc
 *.zip
+
+# Local virtual environment and test cache
+.venv/
+.pytest_cache/

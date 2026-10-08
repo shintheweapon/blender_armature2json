@@ -1,0 +1,19 @@
+# Development environment for the FLVER Node Exporter (managed with uv).
+# The extension itself is built from src/ by build.ps1 and needs nothing beyond Blender.
+
+[project]
+name = "flver-node-export"
+version = "0.1.0"
+description = "Blender extension that exports an armature as FLVER node JSON for FLVER_Editor"
+# Blender 4.5 runs Python 3.11
+requires-python = ">=3.11,<3.12"
+dependencies = []
+
+[tool.uv]
+# Not a pip package: uv only manages the virtual environment
+package = false
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]

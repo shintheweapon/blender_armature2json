@@ -118,7 +118,27 @@ single precision and whole numbers written without decimals, matching files expo
 
 ## Development
 
-Run the tests inside Blender 4.5:
+### Virtual environment
+
+The development tools run in a Python 3.11 virtual environment managed by [uv](https://docs.astral.sh/uv/),
+the same minor version as Blender 4.5's Python. `pyproject.toml` lists what is wanted and `uv.lock` pins
+exactly what is installed; both are committed. The extension itself needs nothing beyond Blender.
+
+Create or update `.venv` from the lock file (uv downloads Python 3.11 if needed):
+
+```
+uv sync
+```
+
+Run the tests that need no Blender:
+
+```
+uv run pytest tests\test_fix_skeleton_set.py
+```
+
+### Tests in Blender
+
+Run the full test suite inside Blender 4.5:
 
 ```
 "blender.exe" -b -P tests\run_tests.py

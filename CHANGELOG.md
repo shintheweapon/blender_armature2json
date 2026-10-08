@@ -17,3 +17,5 @@
   the unused entries zeroed.
 - Test runner for Blender (`tests/run_tests.py`), unit and end-to-end tests, and a comparison against vanilla
   node JSON files (`tests/check_samples.py`).
+- Development environment: a uv-managed Python 3.11 virtual environment with pinned test dependencies
+  (`pyproject.toml`, `uv.lock`, `.python-version`).
