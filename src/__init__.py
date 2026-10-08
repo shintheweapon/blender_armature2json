@@ -1,12 +1,32 @@
 # FLVER Node Exporter: writes FLVER node JSON from a Blender armature
 
 import bpy
-from bpy.props import BoolProperty, EnumProperty
+from bpy.props import BoolProperty, EnumProperty, StringProperty
 
 from . import operators, ui
-from .core import transforms
+from .core import merge, transforms
 
 _AXIS_ITEMS = [(axis, axis, f"Node {axis} axis") for axis in transforms.AXES]
+
+# Third item of each entry is the tooltip shown in the dropdown
+_MODE_ITEMS = [
+    ('ARMATURE', "From Armature",
+     "Build every node from the armature. No input JSON is needed"),
+    ('MERGE', "Merge into Input JSON",
+     "Keep every node of an input JSON (for example a vanilla one from FLVER_Editor) "
+     "and add the armature's bones that it lacks"),
+]
+
+_REPARENT_ITEMS = [
+    (merge.KEEP_INPUT, "Keep Input Parent",
+     "Keep the input JSON's parent and values. The bone stays where the input put it"),
+    (merge.BLENDER_KEEP_PLACEMENT, "Use Blender Parent, Keep Placement",
+     "Use the Blender parent and recompute the bone's values, so it stays where the "
+     "input put it, axes included"),
+    (merge.BLENDER_AS_IS, "Use Blender Parent, Keep Values (old add-on)",
+     "Use the Blender parent but keep the input values relative to the old parent, "
+     "as the old Armature2JSON add-on did. The bone can move"),
+]
 
 classes = (
     *operators.classes,
@@ -16,6 +36,26 @@ classes = (
 
 def register_properties():
     """Register the Scene properties that hold the export options."""
+    bpy.types.Scene.flver_node_export_mode = EnumProperty(
+        name="Mode",
+        description="How to build the node list",
+        items=_MODE_ITEMS,
+        default='ARMATURE',
+    )
+    bpy.types.Scene.flver_node_export_input_path = StringProperty(
+        name="Input JSON",
+        description="Node JSON to merge into, exported by FLVER_Editor. "
+                    "Its nodes are kept as they are",
+        subtype='FILE_PATH',
+        default="",
+    )
+    bpy.types.Scene.flver_node_export_reparent = EnumProperty(
+        name="Reparented Bones",
+        description="What to do with bones that are in the input JSON but have a "
+                    "different parent in Blender",
+        items=_REPARENT_ITEMS,
+        default=merge.KEEP_INPUT,
+    )
     bpy.types.Scene.flver_node_export_length_axis = EnumProperty(
         name="Length Axis",
         description="Node axis that runs along each bone. Vanilla skeletons use X",
@@ -39,6 +79,9 @@ def register_properties():
 
 def unregister_properties():
     """Remove the Scene properties added by :func:`register_properties`."""
+    del bpy.types.Scene.flver_node_export_mode
+    del bpy.types.Scene.flver_node_export_input_path
+    del bpy.types.Scene.flver_node_export_reparent
     del bpy.types.Scene.flver_node_export_length_axis
     del bpy.types.Scene.flver_node_export_roll_axis
     del bpy.types.Scene.flver_node_export_mark_root_as_mesh

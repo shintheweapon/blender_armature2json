@@ -3,6 +3,7 @@
 from .export_operator import (
     FLVER_NODE_EXPORT_OT_export,
     classes,
+    draw_options,
     find_armature,
     menu_func_export,
 )
@@ -10,6 +11,7 @@ from .export_operator import (
 __all__ = [
     'FLVER_NODE_EXPORT_OT_export',
     'classes',
+    'draw_options',
     'find_armature',
     'menu_func_export',
 ]

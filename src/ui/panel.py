@@ -2,7 +2,7 @@
 
 import bpy
 
-from ..operators import find_armature
+from ..operators import draw_options, find_armature
 
 
 class FLVER_NODE_EXPORT_PT_main(bpy.types.Panel):
@@ -25,10 +25,7 @@ class FLVER_NODE_EXPORT_PT_main(bpy.types.Panel):
         else:
             box.label(text=f"Armature: {armature_obj.name}", icon='ARMATURE_DATA')
 
-        col = layout.column(align=True)
-        col.prop(scene, "flver_node_export_length_axis")
-        col.prop(scene, "flver_node_export_roll_axis")
-        layout.prop(scene, "flver_node_export_mark_root_as_mesh")
+        draw_options(layout, scene)
 
         row = layout.row()
         row.scale_y = 1.5

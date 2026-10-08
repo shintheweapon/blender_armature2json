@@ -9,6 +9,11 @@
   (plain Python, tested in `tests/unit/test_merge.py`), and `writer.merge_nodes` fills in the values
   (`tests/test_merge_blender.py`). An added bone's values are relative to its parent as written in the output,
   so it lands where the bone is even when that parent keeps the input's axes.
+- Mode choice in the sidebar panel and the export dialog: "From Armature" (as before) or "Merge into Input
+  JSON", with the input JSON path and a "Reparented Bones" choice (Keep Input Parent; Use Blender Parent, Keep
+  Placement; Use Blender Parent, Keep Values as the old Armature2JSON add-on did). Every option and choice has
+  a tooltip. Merge reports the number of added bones and warns about input nodes with no bone and about
+  reparented bones.
 
 ### Changed
 - `src/core/hierarchy.py` imports `bpy` only for type hints, so `link_indices` runs without Blender.
