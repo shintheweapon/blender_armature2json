@@ -22,6 +22,10 @@
 - README: the two modes, a "Merge into Reference JSON" section with the reparent choices and the differences from
   the old Armature2JSON add-on.
 
+- Simplified Chinese (zh_HANS) interface, tooltips and messages (`src/core/i18n_zh_hans.py`), registered with
+  `bpy.app.translations`. The table is checked for completeness and matching fields in
+  `tests/unit/test_i18n.py`, and in Blender by `tests/test_i18n_blender.py`.
+
 ### Changed
 - Version 0.2.0 (`src/blender_manifest.toml`, `pyproject.toml`).
 - The sidebar tab and panel are now "FLVER Bone Nodes" and "FLVER Bone Node Export", naming what the add-on

@@ -23,7 +23,10 @@ class FLVER_NODE_EXPORT_PT_main(bpy.types.Panel):
             box.alert = True
             box.label(text="No armature in the scene", icon='ERROR')
         else:
-            box.label(text=f"Armature: {armature_obj.name}", icon='ARMATURE_DATA')
+            # Formatted text: translate the template, then fill it in
+            text = bpy.app.translations.pgettext_iface("Armature: {name}")
+            box.label(text=text.format(name=armature_obj.name), icon='ARMATURE_DATA',
+                      translate=False)
 
         draw_options(layout, scene)
 

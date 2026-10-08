@@ -61,7 +61,8 @@ def draw_options(layout: bpy.types.UILayout, scene: bpy.types.Scene) -> None:
 
 def _text(template: str, **fields) -> str:
     """
-    Fill a message template from :mod:`core.messages`.
+    Fill a message template from :mod:`core.messages`, in the interface
+    language when Blender translates reports.
 
     Parameters
     ----------
@@ -75,7 +76,7 @@ def _text(template: str, **fields) -> str:
     str
         The message.
     """
-    return template.format(**fields)
+    return bpy.app.translations.pgettext_rpt(template).format(**fields)
 
 
 def _names(template: str, names) -> str:

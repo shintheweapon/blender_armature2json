@@ -4,7 +4,7 @@ import bpy
 from bpy.props import BoolProperty, EnumProperty, StringProperty
 
 from . import operators, ui
-from .core import merge, transforms
+from .core import i18n_zh_hans, merge, transforms
 
 _AXIS_ITEMS = [(axis, axis, f"Node {axis} axis") for axis in transforms.AXES]
 
@@ -89,7 +89,8 @@ def unregister_properties():
 
 
 def register():
-    """Register the extension's classes, properties and menu entry."""
+    """Register the extension's classes, properties, menu entry and translations."""
+    bpy.app.translations.register(__name__, {'zh_HANS': i18n_zh_hans.table()})
     for cls in classes:
         bpy.utils.register_class(cls)
     register_properties()
@@ -102,3 +103,4 @@ def unregister():
     unregister_properties()
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
+    bpy.app.translations.unregister(__name__)

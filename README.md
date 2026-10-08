@@ -30,6 +30,8 @@ Without the script, zip the contents of the `src` folder by hand (not the folder
 1. Select the armature (or keep it as the only armature in the scene).
 2. Choose File > Export > FLVER Nodes JSON (.json), or use the "FLVER Bone Nodes" tab in the 3D Viewport sidebar.
    Pick the mode; for Merge into Reference JSON, also pick the reference JSON. Hover any option for its tooltip.
+   The add-on follows Blender's interface language; Simplified Chinese (简体中文) is included, for the
+   interface, tooltips and messages, as far as Blender's Translation preferences allow.
 3. In FLVER_Editor, open the vanilla FLVER, press "Load JSON" and pick the exported file. Answer "Yes" when it
    asks to shift bone weights to the new bone indices.
 4. Import the new meshes with "Import Model" (FBX). FLVER_Editor matches their vertex groups to nodes by name.
