@@ -106,7 +106,7 @@ Blender you moved `L_Hand` under `L_UpperArm`.
 |---|---|---|---|
 | Keep Reference Parent | `L_Forearm` | as in the reference | stays in place |
 | Use Blender Parent, Keep Placement | `L_UpperArm` | recomputed relative to `L_UpperArm` | stays in place, same axes |
-| Use Blender Parent, Keep Values (Armature2JSON) | `L_UpperArm` | as in the reference, now read relative to `L_UpperArm` | moves |
+| Use Blender Parent, Keep Values (1.0.0) | `L_UpperArm` | as in the reference, now read relative to `L_UpperArm` | moves |
 
 A bone cannot be reparented under an added bone, because added bones come after the reference's bones and a parent
 must come first; the export stops and names the bone. Keep Reference Parent always works.

@@ -17,13 +17,13 @@ v0.1.0) and takes over its extension id `armature2json`, so installing it replac
   so it lands where the bone is even when that parent keeps the reference's axes.
 - Mode choice in the sidebar panel and the export dialog: "From Armature" (as before) or "Merge into Reference
   JSON", with the reference JSON path and a "Reparented Bones" choice (Keep Reference Parent; Use Blender
-  Parent, Keep Placement; Use Blender Parent, Keep Values (Armature2JSON), as the old add-on did). Every option and choice has
-  a tooltip. Merge reports the number of added bones and warns about reference nodes with no bone and about
+  Parent, Keep Placement; Use Blender Parent, Keep Values (1.0.0), as Armature2JSON 1.0.0 did). Every option and
+  choice has a tooltip. Merge reports the number of added bones and warns about reference nodes with no bone and about
   reparented bones.
 - `tests/check_samples.py` also checks Merge into Reference JSON: it drops leaf nodes from the vanilla list, merges
   the armature back in, and compares the kept and re-added nodes with vanilla.
 - README: the two modes, a "Merge into Reference JSON" section with the reparent choices and the differences from
-  the old Armature2JSON add-on.
+  Armature2JSON 1.0.0.
 
 - Simplified Chinese (zh_HANS) interface, tooltips and messages (`src/core/i18n_zh_hans.py`), registered with
   `bpy.app.translations`. The table is checked for completeness and matching fields in

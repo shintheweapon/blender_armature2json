@@ -23,9 +23,9 @@ _REPARENT_ITEMS = [
     (merge.BLENDER_KEEP_PLACEMENT, "Use Blender Parent, Keep Placement",
      "Use the Blender parent and recompute the bone's values, so it stays where it "
      "was, axes included"),
-    (merge.BLENDER_AS_IS, "Use Blender Parent, Keep Values (Armature2JSON)",
+    (merge.BLENDER_AS_IS, "Use Blender Parent, Keep Values (1.0.0)",
      "Use the Blender parent but keep the values relative to the old parent, "
-     "as the old Armature2JSON add-on did. The bone can move"),
+     "as Armature2JSON 1.0.0 did. The bone can move"),
 ]
 
 classes = (
