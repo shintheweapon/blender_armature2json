@@ -1,11 +1,14 @@
-# FLVER Node Exporter
+# Armature2JSON
 
 A Blender 4.5 extension that writes a FLVER node list (the "Nodes JSON" that FLVER_Editor loads) from a Blender
 armature, in one of two modes:
 
 - **From Armature:** every node is built from the armature. A vanilla node JSON is not needed.
 - **Merge into Reference JSON:** every node of a reference JSON (for example a vanilla one exported by FLVER_Editor)
-  is kept, and the armature's bones that it lacks are added. This replaces the older Armature2JSON add-on.
+  is kept, and the armature's bones that it lacks are added. This is what Armature2JSON 1.0.0 did.
+
+Version 2.0.0 is a rewrite of Armature2JSON 1.0.0: new maths, the From Armature mode, safe file writing and a
+Simplified Chinese interface (see [Upgrading from Armature2JSON 1.0.0](#upgrading-from-armature2json-100)).
 
 ## Install
 
@@ -15,7 +18,7 @@ armature, in one of two modes:
    .\build.ps1
    ```
 
-   It runs Blender's own extension build, writes `dist\flver_node_export-0.2.0.zip` (the name follows `id` and
+   It runs Blender's own extension build, writes `dist\armature2json-2.0.0.zip` (the name follows `id` and
    `version` in `src\blender_manifest.toml`), and checks that the zip installs cleanly. If Blender lives
    elsewhere, pass its path: `.\build.ps1 -Blender "<path to blender.exe>"`. On a machine whose execution
    policy blocks scripts, run `powershell -ExecutionPolicy Bypass -File build.ps1` instead.
@@ -25,10 +28,19 @@ armature, in one of two modes:
 Without the script, zip the contents of the `src` folder by hand (not the folder itself, and without the
 `__pycache__` folders), so that `blender_manifest.toml` sits at the top of the zip.
 
+### Upgrading from Armature2JSON 1.0.0
+
+- Installing the 2.0.0 zip replaces 1.0.0, because both use the extension id `armature2json`.
+- The 1.0.0 workflow is the Merge into Reference JSON mode. The reference JSON path saved in a .blend file
+  carries over; the 1.0.0 axis settings do not, because the maths changed (see
+  [Merge into Reference JSON](#merge-into-reference-json)).
+- If the earlier test build `flver_node_export` is installed, uninstall it: it is this exporter under its
+  old name.
+
 ## Use
 
 1. Select the armature (or keep it as the only armature in the scene).
-2. Choose File > Export > FLVER Nodes JSON (.json), or use the "FLVER Bone Nodes" tab in the 3D Viewport sidebar.
+2. Choose File > Export > FLVER Nodes JSON (.json), or use the "Armature2JSON" tab in the 3D Viewport sidebar.
    Pick the mode; for Merge into Reference JSON, also pick the reference JSON. Hover any option for its tooltip.
    The add-on follows Blender's interface language; Simplified Chinese (简体中文) is included, for the
    interface, tooltips and messages, as far as Blender's Translation preferences allow.
@@ -95,10 +107,10 @@ Blender you moved `L_Hand` under `L_UpperArm`.
 A bone cannot be reparented under an added bone, because added bones come after the reference's bones and a parent
 must come first; the export stops and names the bone. Keep Reference Parent always works.
 
-**Difference from the old Armature2JSON add-on.** Both keep the reference nodes and add the missing bones in the
+**Difference from Armature2JSON 1.0.0.** Both keep the reference nodes and add the missing bones in the
 same place. They compute the added bones differently:
 
-| | Armature2JSON | This exporter |
+| | 1.0.0 | 2.0.0 |
 |---|---|---|
 | Space | Blender armature space; the armature object's transform is ignored | FLVER space (Y up, mirrored along Z), armature object included |
 | Bone axes | One axis remap for all bones; by default the node keeps Blender's axes | Length and roll axes as in [How bones become nodes](#how-bones-become-nodes) |
@@ -106,8 +118,8 @@ same place. They compute the added bones differently:
 | Rotation | Single-precision `asin` | Double-precision `atan2`, exact near gimbal lock |
 | Bounding box | Zero | From the weighted vertices |
 
-On three sample characters, the old add-on's maths reproduces the vanilla joint positions for only part of
-the bones, while this exporter matches them all.
+On three sample characters, the 1.0.0 maths reproduces the vanilla joint positions for only part of
+the bones, while 2.0.0 matches them all.
 
 ## Fix the SkeletonSet after Load JSON
 
