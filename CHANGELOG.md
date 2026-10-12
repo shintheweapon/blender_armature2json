@@ -31,6 +31,8 @@ v0.1.0) and takes over its extension id `armature2json`, so installing it replac
 
 ### Changed
 - Version 2.0.0 (`src/blender_manifest.toml`, `pyproject.toml`).
+- Mark Root as Mesh Node is an add-on preference (`src/prefs.py`) instead of a scene setting, so Blender remembers
+  the choice between sessions. It also shows in the add-on's preferences.
 - Every name is Armature2JSON: extension id `armature2json`, the sidebar tab and panel, the command
   `armature2json.export`, the scene settings `armature2json_*` and the pyproject package. The reference JSON
   path keeps the setting name 1.0.0 used, so a saved path carries over. The File > Export entry keeps

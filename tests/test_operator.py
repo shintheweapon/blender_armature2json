@@ -11,6 +11,44 @@ import helpers
 import src
 from src.core import writer
 
+# Module name of the add-on in these tests (Blender names its preferences after it)
+PACKAGE = 'src'
+
+
+def add_preferences_entry(test: unittest.TestCase):
+    """
+    Give the add-on a preferences entry, as Blender does when it is enabled.
+
+    Parameters
+    ----------
+    test : unittest.TestCase
+        The entry is removed again when this test ends.
+
+    Returns
+    -------
+    bpy.types.AddonPreferences
+        The add-on's preferences.
+    """
+    addons = bpy.context.preferences.addons
+    if PACKAGE not in addons.keys():
+        addons.new().module = PACKAGE
+    test.addCleanup(lambda: addons.remove(addons[PACKAGE]) if PACKAGE in addons.keys() else None)
+    return addons[PACKAGE].preferences
+
+
+def export_flags(test: unittest.TestCase):
+    """Export a two-bone armature with the operator and return the nodes' Flags."""
+    arm = helpers.make_armature([
+        ('Root', None, (0, 0, 0), (0, 1, 0), 0.0),
+        ('Tip', 'Root', (0, 1, 0), (0, 2, 0), 0.0),
+    ])
+    bpy.context.view_layer.objects.active = arm
+    with tempfile.TemporaryDirectory() as folder:
+        path = os.path.join(folder, 'out.json')
+        test.assertEqual(bpy.ops.armature2json.export(filepath=path), {'FINISHED'})
+        with open(path, encoding='utf-8') as handle:
+            return [n['Flags'] for n in json.load(handle)]
+
 
 class ExportOperatorTests(unittest.TestCase):
 
@@ -21,13 +59,13 @@ class ExportOperatorTests(unittest.TestCase):
     def tearDown(self):
         src.unregister()
 
-    def test_operator_writes_nodes_with_scene_options(self):
+    def test_operator_writes_nodes_with_the_options(self):
         arm = helpers.make_armature([
             ('Root', None, (0, 0, 0), (0, 1, 0), 0.0),
             ('Tip', 'Root', (0, 1, 0), (0, 2, 0), 0.0),
         ])
         bpy.context.view_layer.objects.active = arm
-        bpy.context.scene.armature2json_mark_root_as_mesh = False
+        add_preferences_entry(self).mark_root_as_mesh = False
         with tempfile.TemporaryDirectory() as folder:
             path = os.path.join(folder, 'out.json')
             result = bpy.ops.armature2json.export(filepath=path)
@@ -129,6 +167,32 @@ class ExportOperatorTests(unittest.TestCase):
         names = [getattr(f, '__name__', '') for f in bpy.types.TOPBAR_MT_file_export._dyn_ui_initialize()]
         self.assertIn('menu_func_export', names)
 
+
+
+class MarkRootPreferenceTests(unittest.TestCase):
+    """Mark Root as Mesh Node is an add-on preference, so Blender remembers it between sessions."""
+
+    def setUp(self):
+        helpers.new_scene()
+        src.register()
+        self.addCleanup(src.unregister)
+
+    def test_preference_off_writes_bone_flags(self):
+        add_preferences_entry(self).mark_root_as_mesh = False
+        self.assertEqual(export_flags(self), [8, 8])
+
+    def test_preference_on_marks_the_root(self):
+        add_preferences_entry(self).mark_root_as_mesh = True
+        self.assertEqual(export_flags(self), [12, 8])
+
+    def test_without_preferences_the_default_is_on(self):
+        from src import prefs
+        self.assertIsNone(prefs.get(bpy.context))
+        self.assertTrue(prefs.mark_root_as_mesh(bpy.context))
+        self.assertEqual(export_flags(self), [12, 8])
+
+    def test_scene_no_longer_has_the_option(self):
+        self.assertNotIn('armature2json_mark_root_as_mesh', bpy.types.Scene.bl_rna.properties.keys())
 
 if __name__ == '__main__':
     unittest.main()

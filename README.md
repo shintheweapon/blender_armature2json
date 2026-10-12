@@ -62,6 +62,10 @@ Without the script, zip the contents of the `src` folder by hand (not the folder
 | Roll Axis | The node axis that each bone's Z axis becomes (in Merge, each added bone's) | `-Z` |
 | Mark Root as Mesh Node | From Armature only: write node 0 with Flags 12 (Mesh and Bone) instead of 8 (Bone) | on |
 
+Each .blend file keeps its own options, except Mark Root as Mesh Node: it is an add-on preference, so Blender
+remembers it between sessions (when it saves its preferences, which it does at quit by default). It also shows
+in Edit > Preferences > Add-ons > Armature2JSON.
+
 ## Warning: indices that FLVER_Editor does not update
 
 In From Armature mode, nodes are written in depth-first order, which differs from the vanilla order. In Merge

@@ -15,7 +15,6 @@ class ARMATURE2JSON_PT_main(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        scene = context.scene
         armature_obj = find_armature(context)
 
         box = layout.box()
@@ -28,7 +27,7 @@ class ARMATURE2JSON_PT_main(bpy.types.Panel):
             box.label(text=text.format(name=armature_obj.name), icon='ARMATURE_DATA',
                       translate=False)
 
-        draw_options(layout, scene)
+        draw_options(layout, context)
 
         row = layout.row()
         row.scale_y = 1.5

@@ -7,6 +7,7 @@ import bpy
 from bpy.props import StringProperty
 from bpy_extras.io_utils import ExportHelper
 
+from .. import prefs
 from ..core import files, messages, writer
 
 # Names shown in a report message before the rest go to the system console
@@ -35,7 +36,7 @@ def find_armature(context: bpy.types.Context) -> Optional[bpy.types.Object]:
                  if obj.type == 'ARMATURE'), None)
 
 
-def draw_options(layout: bpy.types.UILayout, scene: bpy.types.Scene) -> None:
+def draw_options(layout: bpy.types.UILayout, context: bpy.types.Context) -> None:
     """
     Draw the export options, shared by the sidebar panel and the export dialog.
 
@@ -43,9 +44,11 @@ def draw_options(layout: bpy.types.UILayout, scene: bpy.types.Scene) -> None:
     ----------
     layout : bpy.types.UILayout
         Layout to draw into.
-    scene : bpy.types.Scene
-        Scene that holds the options.
+    context : bpy.types.Context
+        Current Blender context: its scene holds most options, the add-on
+        preferences hold Mark Root as Mesh Node.
     """
+    scene = context.scene
     layout.row().prop(scene, "armature2json_mode", expand=True)
     merging = scene.armature2json_mode == 'MERGE'
     if merging:
@@ -55,8 +58,9 @@ def draw_options(layout: bpy.types.UILayout, scene: bpy.types.Scene) -> None:
     col = layout.column(align=True)
     col.prop(scene, "armature2json_length_axis")
     col.prop(scene, "armature2json_roll_axis")
-    if not merging:
-        layout.prop(scene, "armature2json_mark_root_as_mesh")
+    options = prefs.get(context)
+    if not merging and options is not None:
+        layout.prop(options, "mark_root_as_mesh")
 
 
 def _text(template: str, **fields) -> str:
@@ -137,7 +141,7 @@ class ARMATURE2JSON_OT_export(bpy.types.Operator, ExportHelper):
         return find_armature(context) is not None
 
     def draw(self, context):
-        draw_options(self.layout, context.scene)
+        draw_options(self.layout, context)
 
     def execute(self, context):
         scene = context.scene
@@ -149,7 +153,7 @@ class ARMATURE2JSON_OT_export(bpy.types.Operator, ExportHelper):
                 armature_obj,
                 length_axis=scene.armature2json_length_axis,
                 roll_axis=scene.armature2json_roll_axis,
-                mark_root_as_mesh=scene.armature2json_mark_root_as_mesh,
+                mark_root_as_mesh=prefs.mark_root_as_mesh(context),
             )
             writer.write_nodes(self.filepath, nodes)
         except ValueError as error:

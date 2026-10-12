@@ -1,9 +1,9 @@
 # Armature2JSON: writes FLVER node JSON from a Blender armature
 
 import bpy
-from bpy.props import BoolProperty, EnumProperty, StringProperty
+from bpy.props import EnumProperty, StringProperty
 
-from . import operators, ui
+from . import operators, prefs, ui
 from .core import i18n_zh_hans, merge, transforms
 
 _AXIS_ITEMS = [(axis, axis, f"Node {axis} axis") for axis in transforms.AXES]
@@ -29,6 +29,7 @@ _REPARENT_ITEMS = [
 ]
 
 classes = (
+    prefs.ARMATURE2JSON_preferences,
     *operators.classes,
     *ui.classes,
 )
@@ -70,12 +71,6 @@ def register_properties():
         items=_AXIS_ITEMS,
         default=transforms.DEFAULT_ROLL_AXIS,
     )
-    bpy.types.Scene.armature2json_mark_root_as_mesh = BoolProperty(
-        name="Mark Root as Mesh Node",
-        description="Write node 0 with Flags 12 (Mesh and Bone) instead of 8 (Bone). "
-                    "FLVER_Editor points every mesh it imports from FBX at node 0",
-        default=True,
-    )
 
 
 def unregister_properties():
@@ -85,7 +80,6 @@ def unregister_properties():
     del bpy.types.Scene.armature2json_reparent
     del bpy.types.Scene.armature2json_length_axis
     del bpy.types.Scene.armature2json_roll_axis
-    del bpy.types.Scene.armature2json_mark_root_as_mesh
 
 
 def register():

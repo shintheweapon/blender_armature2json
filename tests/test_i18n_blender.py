@@ -9,12 +9,12 @@ import bpy
 
 import helpers
 import src
-from src import operators, ui
+from src import operators, prefs, ui
 from src.core import i18n_zh_hans
 
 ADDON_PROPERTIES = ('armature2json_mode', 'armature2json_input_path',
                     'armature2json_reparent', 'armature2json_length_axis',
-                    'armature2json_roll_axis', 'armature2json_mark_root_as_mesh')
+                    'armature2json_roll_axis')
 
 
 # Names that stay as they are in every language
@@ -55,6 +55,9 @@ class ChineseTests(unittest.TestCase):
                     if item.name not in ('X', 'Y', 'Z', '-X', '-Y', '-Z'):
                         texts.append(item.name)
                     texts.append(item.description)
+        for prop in prefs.ARMATURE2JSON_preferences.bl_rna.properties:
+            if prop.identifier not in ('rna_type', 'bl_idname'):
+                texts += [prop.name, prop.description]
         for panel in ui.classes:
             texts += [panel.bl_label, panel.bl_category, "No armature in the scene",
                       "Armature: {name}"]
