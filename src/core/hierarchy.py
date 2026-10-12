@@ -2,6 +2,9 @@
 
 from typing import TYPE_CHECKING, Dict, List
 
+from . import messages
+from .messages import ExportError
+
 if TYPE_CHECKING:
     # Only for type hints, so link_indices imports without Blender
     import bpy
@@ -59,8 +62,7 @@ def link_indices(parent_indices: List[int]) -> List[Dict[str, int]]:
     children: Dict[int, List[int]] = {}
     for index, parent in enumerate(parent_indices):
         if not -1 <= parent < index:
-            raise ValueError(
-                f"Node {index} has parent {parent}; parents must come first.")
+            raise ExportError(messages.PARENTS_FIRST, index=index, parent=parent)
         children.setdefault(parent, []).append(index)
 
     links = [{'FirstChildIndex': -1, 'NextSiblingIndex': -1,

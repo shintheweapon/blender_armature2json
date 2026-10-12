@@ -1,31 +1,50 @@
 # Changelog
 
-## 0.2.0 (unreleased)
+## 2.0.0
+
+The first release of the rewrite, from the Armature2JSON repository. It replaces Armature2JSON 1.0.0 (tag
+v0.1.0) and takes over its extension id `armature2json`, so installing it replaces 1.0.0.
 
 ### Added
 - Plain-Python unit tests in `tests/unit`, run with `uv run pytest` and also by the Blender suite:
   `link_indices` (`test_links.py`) and the SkeletonSet tool (moved from `tests/`).
-- Merge of an armature's bones into an input node list: `src/core/merge.py` plans the order and parents
+- File safety (`src/core/files.py`, tested in `tests/unit/test_files.py`): Merge refuses an output that is the
+  reference JSON (same path, another letter case or a link), and every export writes through a temporary file that
+  is moved into place, so a failed export leaves an existing file untouched.
+- Merge of an armature's bones into a reference node list: `src/core/merge.py` plans the order and parents
   (plain Python, tested in `tests/unit/test_merge.py`), and `writer.merge_nodes` fills in the values
   (`tests/test_merge_blender.py`). An added bone's values are relative to its parent as written in the output,
-  so it lands where the bone is even when that parent keeps the input's axes.
-- Mode choice in the sidebar panel and the export dialog: "From Armature" (as before) or "Merge into Input
-  JSON", with the input JSON path and a "Reparented Bones" choice (Keep Input Parent; Use Blender Parent, Keep
-  Placement; Use Blender Parent, Keep Values as the old Armature2JSON add-on did). Every option and choice has
-  a tooltip. Merge reports the number of added bones and warns about input nodes with no bone and about
+  so it lands where the bone is even when that parent keeps the reference's axes.
+- Mode choice in the sidebar panel and the export dialog: "From Armature" (as before) or "Merge into Reference
+  JSON", with the reference JSON path and a "Reparented Bones" choice (Keep Reference Parent; Use Blender
+  Parent, Keep Placement; Use Blender Parent, Keep Values (1.0.0), as Armature2JSON 1.0.0 did). Every option and
+  choice has a tooltip. Merge reports the number of added bones and warns about reference nodes with no bone and about
   reparented bones.
-- `tests/check_samples.py` also checks Merge into Input JSON: it drops leaf nodes from the vanilla list, merges
+- `tests/check_samples.py` also checks Merge into Reference JSON: it drops leaf nodes from the vanilla list, merges
   the armature back in, and compares the kept and re-added nodes with vanilla.
-- README: the two modes, a "Merge into Input JSON" section with the reparent choices and the differences from
-  the old Armature2JSON add-on.
+- README: the two modes, a "Merge into Reference JSON" section with the reparent choices and the differences from
+  Armature2JSON 1.0.0.
+
+- Simplified Chinese (zh_HANS) interface, tooltips and messages (`src/core/i18n_zh_hans.py`), registered with
+  `bpy.app.translations`. The table is checked for completeness and matching fields in
+  `tests/unit/test_i18n.py`, and in Blender by `tests/test_i18n_blender.py`.
 
 ### Changed
-- Version 0.2.0 (`src/blender_manifest.toml`, `pyproject.toml`).
+- Version 2.0.0 (`src/blender_manifest.toml`, `pyproject.toml`).
+- Mark Root as Mesh Node is an add-on preference (`src/prefs.py`) instead of a scene setting, so Blender remembers
+  the choice between sessions. It also shows in the add-on's preferences.
+- Every name is Armature2JSON: extension id `armature2json`, the sidebar tab and panel, the command
+  `armature2json.export`, the scene settings `armature2json_*` and the pyproject package. The reference JSON
+  path keeps the setting name 1.0.0 used, so a saved path carries over. The File > Export entry keeps
+  FLVER_Editor's "Nodes JSON" name.
+- Every report and error text is a template in `src/core/messages.py`; core errors are `ExportError`, a
+  `ValueError` that keeps its template and fields. The Blender test runner switches the interface to English
+  for the run, since the tests check English messages.
 - `src/core/hierarchy.py` imports `bpy` only for type hints, so `link_indices` runs without Blender.
 - `world_matrices` moved from `tests/check_samples.py` to `src/core/transforms.py`, with a new
   `node_local_matrix`.
 
-## 0.1.0 (unreleased)
+## Rewrite, first steps (not released)
 
 ### Added
 - Conversion from Blender bone transforms to FLVER node transforms (`src/core/transforms.py`): Y-up turn, Z

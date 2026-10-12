@@ -1,15 +1,17 @@
-# Plan a merge of armature bones into an input node list; plain Python
+# Plan a merge of armature bones into a reference node list; plain Python
 
 from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple, Union
 
+from . import messages
 from .hierarchy import link_indices
+from .messages import ExportError
 
-# Fields every FLVER node in an input JSON must have
+# Fields every FLVER node in a reference JSON must have
 NODE_FIELDS = ('Name', 'ParentIndex', 'FirstChildIndex', 'NextSiblingIndex',
                'PreviousSiblingIndex', 'Translation', 'Rotation', 'Scale',
                'BoundingBoxMin', 'BoundingBoxMax', 'Flags')
 
-# Added bones go after the last input node with one of these Flags
+# Added bones go after the last reference node with one of these Flags
 BONE_FLAGS = (8, 10)
 
 KEEP_INPUT = 'KEEP_INPUT'
@@ -17,7 +19,7 @@ BLENDER_KEEP_PLACEMENT = 'BLENDER_KEEP_PLACEMENT'
 BLENDER_AS_IS = 'BLENDER_AS_IS'
 REPARENT_CHOICES = (KEEP_INPUT, BLENDER_KEEP_PLACEMENT, BLENDER_AS_IS)
 
-# Where an output node comes from: ('input', index in the input list) or
+# Where an output node comes from: ('input', index in the reference list) or
 # ('added', bone name)
 Source = Tuple[str, Union[int, str]]
 
@@ -38,16 +40,16 @@ class MergePlan(NamedTuple):
         Per output node, ``FirstChildIndex``, ``NextSiblingIndex`` and
         ``PreviousSiblingIndex``.
     recompute : list of int
-        Output indices of input nodes whose values must be recomputed so
+        Output indices of reference nodes whose values must be recomputed so
         that they keep their placement under a new parent.
     insertion : int
         Output index of the first added node.
     added : list of str
         Names of the added bones, in output order.
     input_only : list of str
-        Names of input nodes that have no bone in the armature.
+        Names of reference nodes that have no bone in the armature.
     reparented : list of str
-        Names of input nodes whose armature parent differs from the input.
+        Names of reference nodes whose armature parent differs from the reference.
     """
     sources: List[Source]
     names: List[str]
@@ -67,33 +69,32 @@ def validate_input(nodes) -> None:
     Parameters
     ----------
     nodes : object
-        The value parsed from the input JSON.
+        The value parsed from the reference JSON.
 
     Raises
     ------
-    ValueError
-        If it is not a list of node objects with all FLVER fields, a unique
+    messages.ExportError
+        A ``ValueError``. If it is not a list of node objects with all FLVER fields, a unique
         string ``Name`` each, and parent indices that point at another node.
     """
     if not isinstance(nodes, list):
-        raise ValueError("The input JSON must be a list of nodes, as FLVER_Editor exports.")
+        raise ExportError(messages.NOT_A_LIST)
     seen = set()
     for index, node in enumerate(nodes):
         if not isinstance(node, dict):
-            raise ValueError(f"Input node {index} is not an object.")
+            raise ExportError(messages.NOT_AN_OBJECT, index=index)
         missing = [field for field in NODE_FIELDS if field not in node]
         if missing:
-            raise ValueError(f"Input node {index} lacks {', '.join(missing)}.")
+            raise ExportError(messages.MISSING_FIELDS, index=index, fields=', '.join(missing))
         name = node['Name']
         if not isinstance(name, str) or not name:
-            raise ValueError(f"Input node {index} has no name.")
+            raise ExportError(messages.NO_NAME, index=index)
         if name in seen:
-            raise ValueError(f"The input JSON has two nodes named '{name}'.")
+            raise ExportError(messages.DUPLICATE_NAME, name=name)
         seen.add(name)
         parent = node['ParentIndex']
         if not isinstance(parent, int) or not -1 <= parent < len(nodes) or parent == index:
-            raise ValueError(f"Input node '{name}' has parent index {parent}, "
-                             "which points at no other node.")
+            raise ExportError(messages.BAD_PARENT_INDEX, name=name, parent=parent)
 
 
 def plan_merge(input_nodes: List[dict],
@@ -102,20 +103,20 @@ def plan_merge(input_nodes: List[dict],
     """
     Decide the order and parents of the merged node list.
 
-    Input nodes keep their order. Bones that the input lacks are inserted as
-    one block after the last input node with Flags 8 or 10 (at 0 if there is
+    Reference nodes keep their order. Bones that the reference lacks are
+    inserted as one block after the last reference node with Flags 8 or 10 (at 0 if there is
     none), in the order given.
 
     Parameters
     ----------
     input_nodes : list of dict
-        The input node list; checked with :func:`validate_input`.
+        The reference node list; checked with :func:`validate_input`.
     bones : sequence of tuple
         ``(name, parent_name)`` per armature bone, parents first;
         ``parent_name`` is None for a root bone.
     reparent : str
-        One of ``REPARENT_CHOICES``: what to do with an input node whose
-        armature parent differs from its input parent.
+        One of ``REPARENT_CHOICES``: what to do with a reference node whose
+        armature parent differs from its reference parent.
 
     Returns
     -------
@@ -124,14 +125,14 @@ def plan_merge(input_nodes: List[dict],
 
     Raises
     ------
-    ValueError
-        If the input is invalid, ``reparent`` is unknown, or a node would
+    messages.ExportError
+        A ``ValueError``. If the reference is invalid, ``reparent`` is unknown, or a node would
         come before its parent.
     """
     validate_input(input_nodes)
     if reparent not in REPARENT_CHOICES:
-        raise ValueError(f"Unknown reparent choice '{reparent}'. "
-                         f"Expected one of {REPARENT_CHOICES}.")
+        raise ExportError(messages.UNKNOWN_REPARENT, choice=reparent,
+                          choices=str(REPARENT_CHOICES))
 
     input_names = [node['Name'] for node in input_nodes]
     input_set = set(input_names)
@@ -173,11 +174,8 @@ def plan_merge(input_nodes: List[dict],
 
     for out_index, parent in enumerate(parents):
         if parent > out_index:
-            raise ValueError(
-                f"Node '{names[out_index]}' would come before its parent "
-                f"'{names[parent]}'. An existing bone cannot be reparented under a "
-                "bone the input lacks, because the added bones go after the "
-                "input's bones. Choose 'Keep Input Parent' or move the bone back.")
+            raise ExportError(messages.PARENT_AFTER_CHILD, name=names[out_index],
+                              parent=names[parent])
 
     return MergePlan(sources=sources, names=names, parents=parents,
                      links=link_indices(parents), recompute=recompute,
