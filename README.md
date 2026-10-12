@@ -1,14 +1,11 @@
 # Armature2JSON
 
-A Blender 4.5 extension that writes a FLVER node list (the "Nodes JSON" that FLVER_Editor loads) from a Blender
-armature, in one of two modes:
+A Blender 4.5 extension that writes a FLVER node list (the "Nodes JSON" or the bone JSON that FLVER Editor loads) from a Blender armature, in one of two modes:
 
 - **From Armature:** every node is built from the armature. A vanilla node JSON is not needed.
-- **Merge into Reference JSON:** every node of a reference JSON (for example a vanilla one exported by FLVER_Editor)
-  is kept, and the armature's bones that it lacks are added. This is what Armature2JSON 1.0.0 did.
+- **Merge into Reference JSON:** every node of a reference JSON (for example a vanilla one exported by FLVER Editor) is kept, and the armature's bones that it lacks are added. This is what Armature2JSON 1.0.0 did.
 
-Version 2.0.0 is a rewrite of Armature2JSON 1.0.0: new maths, the From Armature mode, safe file writing and a
-Simplified Chinese interface (see [Upgrading from Armature2JSON 1.0.0](#upgrading-from-armature2json-100)).
+Version 2.0.0 is a rewrite of Armature2JSON 1.0.0: new maths, the From Armature mode, safe file writing and a Simplified Chinese interface (see [Upgrading from Armature2JSON 1.0.0](#upgrading-from-armature2json-100)).
 
 ## Install
 
@@ -18,38 +15,25 @@ Simplified Chinese interface (see [Upgrading from Armature2JSON 1.0.0](#upgradin
    .\build.ps1
    ```
 
-   It runs Blender's own extension build, writes `dist\armature2json-2.0.0.zip` (the name follows `id` and
-   `version` in `src\blender_manifest.toml`), and checks that the zip installs cleanly. If Blender lives
-   elsewhere, pass its path: `.\build.ps1 -Blender "<path to blender.exe>"`. On a machine whose execution
-   policy blocks scripts, run `powershell -ExecutionPolicy Bypass -File build.ps1` instead.
-2. In Blender: Edit > Preferences > Get Extensions, open the menu at the top right, choose "Install from Disk"
-   and pick the zip.
+   It runs Blender's own extension build, writes `dist\armature2json-2.0.0.zip` (the name follows `id` and `version` in `src\blender_manifest.toml`), and checks that the zip installs cleanly. If Blender lives elsewhere, pass its path: `.\build.ps1 -Blender "<path to blender.exe>"`. On a machine whose execution policy blocks scripts, run `powershell -ExecutionPolicy Bypass -File build.ps1` instead.
+2. In Blender: Edit > Preferences > Get Extensions, open the menu at the top right, choose "Install from Disk" and pick the zip.
 
-Without the script, zip the contents of the `src` folder by hand (not the folder itself, and without the
-`__pycache__` folders), so that `blender_manifest.toml` sits at the top of the zip.
+Without the script, zip the contents of the `src` folder by hand (not the folder itself, and without the `__pycache__` folders), so that `blender_manifest.toml` sits at the top of the zip.
 
 ### Upgrading from Armature2JSON 1.0.0
 
 - Installing the 2.0.0 zip replaces 1.0.0, because both use the extension id `armature2json`.
-- The 1.0.0 workflow is the Merge into Reference JSON mode. The reference JSON path saved in a .blend file
-  carries over; the 1.0.0 axis settings do not, because the maths changed (see
-  [Merge into Reference JSON](#merge-into-reference-json)).
-- If the earlier test build `flver_node_export` is installed, uninstall it: it is this exporter under its
-  old name.
+- The 1.0.0 workflow is the Merge into Reference JSON mode. The reference JSON path saved in a .blend file carries over; the 1.0.0 axis settings do not, because the maths changed (see [Merge into Reference JSON](#merge-into-reference-json)).
+- If the earlier test build `flver_node_export` is installed, uninstall it: it is this exporter under its old name.
 
 ## Use
 
 1. Select the armature (or keep it as the only armature in the scene).
-2. Choose File > Export > FLVER Nodes JSON (.json), or use the "Armature2JSON" tab in the 3D Viewport sidebar.
-   Pick the mode; for Merge into Reference JSON, also pick the reference JSON. Hover any option for its tooltip.
-   The add-on follows Blender's interface language; Simplified Chinese (简体中文) is included, for the
-   interface, tooltips and messages, as far as Blender's Translation preferences allow.
-3. In FLVER_Editor, open the vanilla FLVER, press "Load JSON" and pick the exported file. Answer "Yes" when it
-   asks to shift bone weights to the new bone indices.
-4. Import the new meshes with "Import Model" (FBX). FLVER_Editor matches their vertex groups to nodes by name.
+2. Choose File > Export > FLVER Nodes JSON (.json), or use the "Armature2JSON" tab in the 3D Viewport sidebar. Pick the mode; for Merge into Reference JSON, also pick the reference JSON. Hover any option for its tooltip. The add-on follows Blender's interface language; Simplified Chinese (简体中文) is included, for the interface, tooltips and messages, as far as Blender's Translation preferences allow.
+3. In FLVER Editor, open the vanilla FLVER, press "Load JSON" and pick the exported file. Answer "Yes" when it asks to shift bone weights to the new bone indices.
+4. Import the new meshes with "Import Model" (FBX). FLVER Editor matches their vertex groups to nodes by name.
 5. Open the "Dummy" window and check each dummy's parent and attach bone (see the warning below).
-6. After the last change in FLVER_Editor, fix the SkeletonSet of the saved FLVER and use the fixed copy (see
-   [Fix the SkeletonSet after Load JSON](#fix-the-skeletonset-after-load-json)).
+6. After the last change in FLVER Editor, fix the SkeletonSet of the saved FLVER and use the fixed copy (see [Fix the SkeletonSet after Load JSON](#fix-the-skeletonset-after-load-json)).
 
 ### Options
 
@@ -62,45 +46,25 @@ Without the script, zip the contents of the `src` folder by hand (not the folder
 | Roll Axis | The node axis that each bone's Z axis becomes (in Merge, each added bone's) | `-Z` |
 | Mark Root as Mesh Node | From Armature only: write node 0 with Flags 12 (Mesh and Bone) instead of 8 (Bone) | on |
 
-Each .blend file keeps its own options, except Mark Root as Mesh Node: it is an add-on preference, so Blender
-remembers it between sessions (when it saves its preferences, which it does at quit by default). It also shows
-in Edit > Preferences > Add-ons > Armature2JSON.
+Each .blend file keeps its own options, except Mark Root as Mesh Node: it is an add-on preference, so Blender remembers it between sessions (when it saves its preferences, which it does at quit by default). It also shows in Edit > Preferences > Add-ons > Armature2JSON.
 
-## Warning: indices that FLVER_Editor does not update
+## Warning: indices that FLVER Editor does not update
 
-In From Armature mode, nodes are written in depth-first order, which differs from the vanilla order. In Merge
-mode, the reference's nodes up to the last node with Flags 8 or 10 keep their indices, and the nodes after it (mesh
-and dummy-owner nodes in a vanilla list) move down by the number of added bones. "Load JSON" replaces the node
-list and, with the weight shift, moves vertex weights to the new indices by node name. It leaves these
-references at their old positions:
+In From Armature mode, nodes are written in depth-first order, which differs from the vanilla order. In Merge mode, the reference's nodes up to the last node with Flags 8 or 10 keep their indices, and the nodes after it (mesh and dummy-owner nodes in a vanilla list) move down by the number of added bones. "Load JSON" replaces the node list and, with the weight shift, moves vertex weights to the new indices by node name. It leaves these references at their old positions:
 
 - each dummy's parent bone and attach bone (hit points, effect points and similar);
 - the node index of any vanilla mesh that stays in the FLVER;
-- the SkeletonSet, a second copy of the bone hierarchy stored in the FLVER, which FLVER_Editor writes back
-  unchanged.
+- the SkeletonSet, a second copy of the bone hierarchy stored in the FLVER, which FLVER Editor writes back unchanged.
 
-Point the dummies and kept meshes at the right nodes again in FLVER_Editor after loading the JSON. In Merge mode
-with a vanilla reference JSON, dummies that point at bones keep valid indices; kept meshes, whose nodes come after the
-added bones, still need re-pointing. Meshes imported from FBX afterwards point at node 0, which is why "Mark
-Root as Mesh Node" is on by default in From Armature mode. Rebuild the SkeletonSet with the tool described in
-[Fix the SkeletonSet after Load JSON](#fix-the-skeletonset-after-load-json).
+Point the dummies and kept meshes at the right nodes again in FLVER Editor after loading the JSON. In Merge mode with a vanilla reference JSON, dummies that point at bones keep valid indices; kept meshes, whose nodes come after the added bones, still need re-pointing. Meshes imported from FBX afterwards point at node 0, which is why "Mark Root as Mesh Node" is on by default in From Armature mode. Rebuild the SkeletonSet with the tool described in [Fix the SkeletonSet after Load JSON](#fix-the-skeletonset-after-load-json).
 
 ## Merge into Reference JSON
 
-**Kept nodes.** Every reference node is copied unchanged: values, box and Flags. Only its index, its parent index
-and its child and sibling links change where needed. Reference nodes with no bone in the armature are kept too,
-and the export lists them in a warning. The reference JSON is only read: an output path that names the reference file
-(also through another letter case or a link) stops the export with a message.
+**Kept nodes.** Every reference node is copied unchanged: values, box and Flags. Only its index, its parent index and its child and sibling links change where needed. Reference nodes with no bone in the armature are kept too, and the export lists them in a warning. The reference JSON is only read: an output path that names the reference file (also through another letter case or a link) stops the export with a message.
 
-**Added bones.** Bones the reference lacks are added in depth-first order as one block after the last reference node
-with Flags 8 or 10 (at the start if there is none), with Flags 8. Their values follow
-[How bones become nodes](#how-bones-become-nodes), taken relative to their parent as it is written in the
-output. A vanilla parent keeps its vanilla axes, so the added bone's values are computed against those axes and
-it lands where the bone is in Blender.
+**Added bones.** Bones the reference lacks are added in depth-first order as one block after the last reference node with Flags 8 or 10 (at the start if there is none), with Flags 8. Their values follow [How bones become nodes](#how-bones-become-nodes), taken relative to their parent as it is written in the output. A vanilla parent keeps its vanilla axes, so the added bone's values are computed against those axes and it lands where the bone is in Blender.
 
-**Reparented bones.** A bone that is in the reference but has another parent in Blender is listed in a warning, and
-the Reparented Bones option decides its parent. Example: the reference has `L_Hand` under `L_Forearm`, and in
-Blender you moved `L_Hand` under `L_UpperArm`.
+**Reparented bones.** A bone that is in the reference but has another parent in Blender is listed in a warning, and the Reparented Bones option decides its parent. Example: the reference has `L_Hand` under `L_Forearm`, and in Blender you moved `L_Hand` under `L_UpperArm`.
 
 | Choice | Parent written | `L_Hand`'s values | Result |
 |---|---|---|---|
@@ -108,13 +72,11 @@ Blender you moved `L_Hand` under `L_UpperArm`.
 | Use Blender Parent, Keep Placement | `L_UpperArm` | recomputed relative to `L_UpperArm` | stays in place, same axes |
 | Use Blender Parent, Keep Values (1.0.0) | `L_UpperArm` | as in the reference, now read relative to `L_UpperArm` | moves |
 
-A bone cannot be reparented under an added bone, because added bones come after the reference's bones and a parent
-must come first; the export stops and names the bone. Keep Reference Parent always works.
+A bone cannot be reparented under an added bone, because added bones come after the reference's bones and a parent must come first; the export stops and names the bone. Keep Reference Parent always works.
 
-**Difference from Armature2JSON 1.0.0.** Both keep the reference nodes and add the missing bones in the
-same place. They compute the added bones differently:
+**Difference from Armature2JSON 1.0.0.** Both keep the reference nodes and add the missing bones in the same place. They compute the added bones differently:
 
-| | 1.0.0 | 2.0.0 |
+|  | 1.0.0 | 2.0.0 |
 |---|---|---|
 | Space | Blender armature space; the armature object's transform is ignored | FLVER space (Y up, mirrored along Z), armature object included |
 | Bone axes | One axis remap for all bones; by default the node keeps Blender's axes | Length and roll axes as in [How bones become nodes](#how-bones-become-nodes) |
@@ -122,83 +84,54 @@ same place. They compute the added bones differently:
 | Rotation | Single-precision `asin` | Double-precision `atan2`, exact near gimbal lock |
 | Bounding box | Zero | From the weighted vertices |
 
-On three sample characters, the 1.0.0 maths reproduces the vanilla joint positions for only part of
-the bones, while 2.0.0 matches them all.
+On three sample characters, the 1.0.0 maths reproduces the vanilla joint positions for only part of the bones, while 2.0.0 matches them all.
 
 ## Fix the SkeletonSet after Load JSON
 
-A FLVER (version `0x2001A` and later) stores the bone hierarchy twice: in the node list and in the SkeletonSet.
-"Load JSON" replaces the node list only, so the SkeletonSet keeps describing the old node order. In a working
-FLVER, every SkeletonSet entry mirrors its node. In a FLVER whose SkeletonSet no longer matched its nodes,
-ERCharacterScale showed the model with vanilla proportions instead of retargeting it; rebuilding the
-SkeletonSet is the fix to test first.
+A FLVER (version `0x2001A` and later) stores the bone hierarchy twice: in the node list and in the SkeletonSet. "Load JSON" replaces the node list only, so the SkeletonSet keeps describing the old node order. In a working FLVER, every SkeletonSet entry mirrors its node. In a FLVER whose SkeletonSet no longer matched its nodes, ERCharacterScale showed the model with vanilla proportions instead of retargeting it; rebuilding the SkeletonSet is the fix to test first.
 
-Run the tool on the FLVER saved by FLVER_Editor, after the last edit there:
+Run the tool on the FLVER saved by FLVER Editor, after the last edit there:
 
 ```
 python tools\fix_skeleton_set.py "path\to\model.flver"
 ```
 
-It writes `model.skelfix.flver` next to the input (or to a second path, if given), with every SkeletonSet entry
-rebuilt from its node: parent, first child, next sibling, previous sibling, and the node's own index. When the
-SkeletonSet holds more entries than the FLVER has nodes (left over from a model with more bones), it is shrunk
-to the node count: the extra entries, which point at nodes that no longer exist, are zeroed. Nothing else in the
-file changes, the input is never overwritten, and an existing output file is not replaced. Rename the fixed copy
-to the original name when packing it into the game files.
+It writes `model.skelfix.flver` next to the input (or to a second path, if given), with every SkeletonSet entry rebuilt from its node: parent, first child, next sibling, previous sibling, and the node's own index. When the SkeletonSet holds more entries than the FLVER has nodes (left over from a model with more bones), it is shrunk to the node count: the extra entries, which point at nodes that no longer exist, are zeroed. Nothing else in the file changes, the input is never overwritten, and an existing output file is not replaced. Rename the fixed copy to the original name when packing it into the game files.
 
-The tool only needs Python 3. It refuses files it cannot fix safely: big-endian FLVERs, versions without a
-SkeletonSet, a SkeletonSet with fewer entries than nodes, and node lists with inconsistent links.
+The tool only needs Python 3. It refuses files it cannot fix safely: big-endian FLVERs, versions without a SkeletonSet, a SkeletonSet with fewer entries than nodes, and node lists with inconsistent links.
 
 ## How bones become nodes
 
 A node (one entry of the JSON list) is SoulsFormats' `FLVER.Node`. Each Blender bone becomes one node.
 
-**Position.** FLVER space is Blender space turned so that Y points up, then mirrored along Z:
-a point at Blender (x, y, z) lands at FLVER (x, z, y). The armature object's own transform is included.
+**Position.** FLVER space is Blender space turned so that Y points up, then mirrored along Z: a point at Blender (x, y, z) lands at FLVER (x, z, y). The armature object's own transform is included.
 
-**Axes.** Blender always runs a bone along its own Y axis; vanilla FLVER bones run along their own X axis. The
-length and roll options set the conversion. For skeletons that came from FLVER_Editor's FBX export, the defaults
-give the core bones (clavicles, upper arms, forearms, thighs, neck, fingers) their vanilla axes back, except
-where a Blender bone points at a different child than in the vanilla skeleton.
+**Axes.** Blender always runs a bone along its own Y axis; vanilla FLVER bones run along their own X axis. The length and roll options set the conversion. For skeletons that came from FLVER Editor's FBX export, the defaults give the core bones (clavicles, upper arms, forearms, thighs, neck, fingers) their vanilla axes back, except where a Blender bone points at a different child than in the vanilla skeleton.
 
-**Rotation.** Euler angles in radians, applied X, then Z, then Y, as SoulsFormats'
-`FLVER.Node.ComputeLocalTransform` expects. The angles are computed in double precision so that rotations
-close to gimbal lock stay exact.
+**Rotation.** Euler angles in radians, applied X, then Z, then Y, as SoulsFormats' `FLVER.Node.ComputeLocalTransform` expects. The angles are computed in double precision so that rotations close to gimbal lock stay exact.
 
-**Order.** Nodes are listed depth first: each parent comes before its children, and the children of one
-parent keep Blender's order. ParentIndex, FirstChildIndex, NextSiblingIndex and PreviousSiblingIndex are
-computed from that order; root nodes link to each other as siblings, as in vanilla node lists.
+**Order.** Nodes are listed depth first: each parent comes before its children, and the children of one parent keep Blender's order. ParentIndex, FirstChildIndex, NextSiblingIndex and PreviousSiblingIndex are computed from that order; root nodes link to each other as siblings, as in vanilla node lists.
 
-**Bounding boxes.** A node's BoundingBoxMin and BoundingBoxMax enclose every vertex weighted to its bone
-(weight above zero), measured in the node's own axes. Only meshes with an Armature modifier that targets the
-armature count, and vertices are taken in their rest position. A node with no weighted vertices gets a zero box.
+**Bounding boxes.** A node's BoundingBoxMin and BoundingBoxMax enclose every vertex weighted to its bone (weight above zero), measured in the node's own axes. Only meshes with an Armature modifier that targets the armature count, and vertices are taken in their rest position. A node with no weighted vertices gets a zero box.
 
-**Flags.** Every node gets 8 (Bone). Node 0 gets 12 (Mesh and Bone) while "Mark Root as Mesh Node" is on. In
-Merge mode, reference nodes keep their Flags and added bones get 8.
+**Flags.** Every node gets 8 (Bone). Node 0 gets 12 (Mesh and Bone) while "Mark Root as Mesh Node" is on. In Merge mode, reference nodes keep their Flags and added bones get 8.
 
-**File.** One compact line of UTF-8 JSON without a BOM, field names in `FLVER.Node` order, numbers rounded to
-single precision and whole numbers written without decimals, matching files exported by FLVER_Editor. The file
-is first written to a temporary file in the same folder and then moved into place, so a failed export leaves an
-existing file untouched.
+**File.** One compact line of UTF-8 JSON without a BOM, field names in `FLVER.Node` order, numbers rounded to single precision and whole numbers written without decimals, matching files exported by FLVER Editor. The file is first written to a temporary file in the same folder and then moved into place, so a failed export leaves an existing file untouched.
 
 ## Known limits
 
-- A Blender file does not keep vanilla node axes. Bones other than the core ones (hair, cloth, physics and
-  so on) get the axes the options produce, which can differ from vanilla by quarter or half turns.
+- A Blender file does not keep vanilla node axes. Bones other than the core ones (hair, cloth, physics and so on) get the axes the options produce, which can differ from vanilla by quarter or half turns.
 - Scale is 1 unless the armature object itself is scaled; Blender rest bones have no scale.
 - Bounding boxes ignore modifiers and shape keys; they use the mesh as stored.
 - The DummyOwner flag (2) is never set on an exported bone; in Merge mode, reference nodes keep theirs.
 - Merge keeps reference nodes with no bone in the armature as they are; delete them in the reference if they should go.
-- Merge refuses to reparent a reference bone under an added bone (see
-  [Merge into Reference JSON](#merge-into-reference-json)).
+- Merge refuses to reparent a reference bone under an added bone (see [Merge into Reference JSON](#merge-into-reference-json)).
 
 ## Development
 
 ### Virtual environment
 
-The development tools run in a Python 3.11 virtual environment managed by [uv](https://docs.astral.sh/uv/),
-the same minor version as Blender 4.5's Python. `pyproject.toml` lists what is wanted and `uv.lock` pins
-exactly what is installed; both are committed. The extension itself needs nothing beyond Blender.
+The development tools run in a Python 3.11 virtual environment managed by [uv](https://docs.astral.sh/uv/), the same minor version as Blender 4.5's Python. `pyproject.toml` lists what is wanted and `uv.lock` pins exactly what is installed; both are committed. The extension itself needs nothing beyond Blender.
 
 Create or update `.venv` from the lock file (uv downloads Python 3.11 if needed):
 
@@ -214,8 +147,7 @@ uv run pytest
 
 ### Tests in Blender
 
-Run the full test suite inside Blender 4.5. It includes `tests/unit`, and it switches Blender's interface to
-English for the run (preferences are not saved), because the tests check English messages:
+Run the full test suite inside Blender 4.5. It includes `tests/unit`, and it switches Blender's interface to English for the run (preferences are not saved), because the tests check English messages:
 
 ```
 "blender.exe" -b -P tests\run_tests.py
@@ -227,9 +159,6 @@ Compare the output with a vanilla node JSON saved next to a sample `.blend` unde
 "blender.exe" -b sample.blend -P tests\check_samples.py
 ```
 
-The check passes when names and parents match, joint positions match within 1e-4, and every box, turned into
-the vanilla node's axes, matches within 1e-4. It also lists which core bones get their vanilla axes.
+The check passes when names and parents match, joint positions match within 1e-4, and every box, turned into the vanilla node's axes, matches within 1e-4. It also lists which core bones get their vanilla axes.
 
-It then checks Merge into Reference JSON: it drops the last 20 leaf nodes whose bones exist in Blender from the
-vanilla list and merges the armature back in. Every kept node must keep its vanilla values and parent, and every
-re-added node must come after the last node with Flags 8 or 10, with its joint position and box within 1e-4.
+It then checks Merge into Reference JSON: it drops the last 20 leaf nodes whose bones exist in Blender from the vanilla list and merges the armature back in. Every kept node must keep its vanilla values and parent, and every re-added node must come after the last node with Flags 8 or 10, with its joint position and box within 1e-4.
