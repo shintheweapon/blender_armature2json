@@ -5,13 +5,13 @@ import bpy
 from ..operators import draw_options, find_armature
 
 
-class FLVER_NODE_EXPORT_PT_main(bpy.types.Panel):
+class ARMATURE2JSON_PT_main(bpy.types.Panel):
     """Export options and button in the 3D Viewport sidebar"""
-    bl_label = "FLVER Bone Node Export"
-    bl_idname = "FLVER_NODE_EXPORT_PT_main"
+    bl_label = "Armature2JSON"
+    bl_idname = "ARMATURE2JSON_PT_main"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = "FLVER Bone Nodes"
+    bl_category = "Armature2JSON"
 
     def draw(self, context):
         layout = self.layout
@@ -32,9 +32,9 @@ class FLVER_NODE_EXPORT_PT_main(bpy.types.Panel):
 
         row = layout.row()
         row.scale_y = 1.5
-        row.operator("flver_node_export.export", text="Export", icon='EXPORT')
+        row.operator("armature2json.export", text="Export", icon='EXPORT')
 
 
 classes = (
-    FLVER_NODE_EXPORT_PT_main,
+    ARMATURE2JSON_PT_main,
 )

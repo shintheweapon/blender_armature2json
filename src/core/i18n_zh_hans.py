@@ -15,8 +15,6 @@ _AXES = ('X', 'Y', 'Z', '-X', '-Y', '-Z')
 
 _INTERFACE = {
     # Sidebar panel
-    "FLVER Bone Nodes": "FLVER 骨骼节点",
-    "FLVER Bone Node Export": "导出 FLVER 骨骼节点",
     "No armature in the scene": "场景里没有骨架",
     "Armature: {name}": "骨架：{name}",
     # Mode

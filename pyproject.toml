@@ -1,8 +1,8 @@
-# Development environment for the FLVER Node Exporter (managed with uv).
+# Development environment for Armature2JSON (managed with uv).
 # The extension itself is built from src/ by build.ps1 and needs nothing beyond Blender.
 
 [project]
-name = "flver-node-export"
+name = "armature2json"
 version = "0.2.0"
 description = "Blender extension that exports an armature as FLVER node JSON for FLVER_Editor"
 # Blender 4.5 runs Python 3.11
