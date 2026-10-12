@@ -15,8 +15,6 @@ _AXES = ('X', 'Y', 'Z', '-X', '-Y', '-Z')
 
 _INTERFACE = {
     # Sidebar panel
-    "FLVER Bone Nodes": "FLVER 骨骼节点",
-    "FLVER Bone Node Export": "导出 FLVER 骨骼节点",
     "No armature in the scene": "场景里没有骨架",
     "Armature: {name}": "骨架：{name}",
     # Mode
@@ -47,11 +45,11 @@ _INTERFACE = {
     "Use the Blender parent and recompute the bone's values, so it stays where it was, "
     "axes included":
         "改用 Blender 中的父级，并重新计算骨骼数值，位置和朝向都保持不变",
-    "Use Blender Parent, Keep Values (Armature2JSON)":
-        "改用 Blender 父级，数值不变（旧插件 Armature2JSON 的做法）",
-    "Use the Blender parent but keep the values relative to the old parent, as the old "
-    "Armature2JSON add-on did. The bone can move":
-        "改用 Blender 中的父级，但数值仍按原父级计算，与旧版 Armature2JSON 插件相同。骨骼可能会错位",
+    "Use Blender Parent, Keep Values (1.0.0)":
+        "改用 Blender 父级，数值不变（1.0.0 的做法）",
+    "Use the Blender parent but keep the values relative to the old parent, as "
+    "Armature2JSON 1.0.0 did. The bone can move":
+        "改用 Blender 中的父级，但数值仍按原父级计算，与 Armature2JSON 1.0.0 相同。骨骼可能会错位",
     # Axes
     "Length Axis": "长度轴",
     "Node axis that runs along each bone. Vanilla skeletons use the X axis":

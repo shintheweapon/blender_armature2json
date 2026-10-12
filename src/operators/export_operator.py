@@ -7,6 +7,7 @@ import bpy
 from bpy.props import StringProperty
 from bpy_extras.io_utils import ExportHelper
 
+from .. import prefs
 from ..core import files, messages, writer
 
 # Names shown in a report message before the rest go to the system console
@@ -35,7 +36,7 @@ def find_armature(context: bpy.types.Context) -> Optional[bpy.types.Object]:
                  if obj.type == 'ARMATURE'), None)
 
 
-def draw_options(layout: bpy.types.UILayout, scene: bpy.types.Scene) -> None:
+def draw_options(layout: bpy.types.UILayout, context: bpy.types.Context) -> None:
     """
     Draw the export options, shared by the sidebar panel and the export dialog.
 
@@ -43,20 +44,23 @@ def draw_options(layout: bpy.types.UILayout, scene: bpy.types.Scene) -> None:
     ----------
     layout : bpy.types.UILayout
         Layout to draw into.
-    scene : bpy.types.Scene
-        Scene that holds the options.
+    context : bpy.types.Context
+        Current Blender context: its scene holds most options, the add-on
+        preferences hold Mark Root as Mesh Node.
     """
-    layout.row().prop(scene, "flver_node_export_mode", expand=True)
-    merging = scene.flver_node_export_mode == 'MERGE'
+    scene = context.scene
+    layout.row().prop(scene, "armature2json_mode", expand=True)
+    merging = scene.armature2json_mode == 'MERGE'
     if merging:
         col = layout.column(align=True)
-        col.prop(scene, "flver_node_export_input_path")
-        col.prop(scene, "flver_node_export_reparent")
+        col.prop(scene, "armature2json_input_path")
+        col.prop(scene, "armature2json_reparent")
     col = layout.column(align=True)
-    col.prop(scene, "flver_node_export_length_axis")
-    col.prop(scene, "flver_node_export_roll_axis")
-    if not merging:
-        layout.prop(scene, "flver_node_export_mark_root_as_mesh")
+    col.prop(scene, "armature2json_length_axis")
+    col.prop(scene, "armature2json_roll_axis")
+    options = prefs.get(context)
+    if not merging and options is not None:
+        layout.prop(options, "mark_root_as_mesh")
 
 
 def _text(template: str, **fields) -> str:
@@ -123,9 +127,9 @@ def _error_text(error: ValueError) -> str:
     return str(error)
 
 
-class FLVER_NODE_EXPORT_OT_export(bpy.types.Operator, ExportHelper):
+class ARMATURE2JSON_OT_export(bpy.types.Operator, ExportHelper):
     """Export the armature's bones as a FLVER node JSON for FLVER_Editor"""
-    bl_idname = "flver_node_export.export"
+    bl_idname = "armature2json.export"
     bl_label = "Export FLVER Nodes JSON"
     bl_options = {'REGISTER'}
 
@@ -137,19 +141,19 @@ class FLVER_NODE_EXPORT_OT_export(bpy.types.Operator, ExportHelper):
         return find_armature(context) is not None
 
     def draw(self, context):
-        draw_options(self.layout, context.scene)
+        draw_options(self.layout, context)
 
     def execute(self, context):
         scene = context.scene
         armature_obj = find_armature(context)
-        if scene.flver_node_export_mode == 'MERGE':
+        if scene.armature2json_mode == 'MERGE':
             return self._merge(scene, armature_obj)
         try:
             nodes = writer.build_nodes(
                 armature_obj,
-                length_axis=scene.flver_node_export_length_axis,
-                roll_axis=scene.flver_node_export_roll_axis,
-                mark_root_as_mesh=scene.flver_node_export_mark_root_as_mesh,
+                length_axis=scene.armature2json_length_axis,
+                roll_axis=scene.armature2json_roll_axis,
+                mark_root_as_mesh=prefs.mark_root_as_mesh(context),
             )
             writer.write_nodes(self.filepath, nodes)
         except ValueError as error:
@@ -164,10 +168,10 @@ class FLVER_NODE_EXPORT_OT_export(bpy.types.Operator, ExportHelper):
 
     def _merge(self, scene, armature_obj):
         """Run the Merge into Reference JSON mode; see :func:`writer.merge_nodes`."""
-        if not scene.flver_node_export_input_path:
+        if not scene.armature2json_input_path:
             self.report({'ERROR'}, _text(messages.CHOOSE_REFERENCE))
             return {'CANCELLED'}
-        input_path = bpy.path.abspath(scene.flver_node_export_input_path)
+        input_path = bpy.path.abspath(scene.armature2json_input_path)
         if files.same_file(self.filepath, input_path):
             self.report({'ERROR'}, _text(messages.WOULD_OVERWRITE))
             return {'CANCELLED'}
@@ -183,9 +187,9 @@ class FLVER_NODE_EXPORT_OT_export(bpy.types.Operator, ExportHelper):
         try:
             nodes, plan = writer.merge_nodes(
                 armature_obj, input_nodes,
-                length_axis=scene.flver_node_export_length_axis,
-                roll_axis=scene.flver_node_export_roll_axis,
-                reparent=scene.flver_node_export_reparent,
+                length_axis=scene.armature2json_length_axis,
+                roll_axis=scene.armature2json_roll_axis,
+                reparent=scene.armature2json_reparent,
             )
             writer.write_nodes(self.filepath, nodes)
         except ValueError as error:
@@ -207,10 +211,10 @@ class FLVER_NODE_EXPORT_OT_export(bpy.types.Operator, ExportHelper):
 
 def menu_func_export(self, context):
     """Add the exporter to File > Export."""
-    self.layout.operator(FLVER_NODE_EXPORT_OT_export.bl_idname,
+    self.layout.operator(ARMATURE2JSON_OT_export.bl_idname,
                          text="FLVER Nodes JSON (.json)")
 
 
 classes = (
-    FLVER_NODE_EXPORT_OT_export,
+    ARMATURE2JSON_OT_export,
 )

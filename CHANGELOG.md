@@ -1,6 +1,9 @@
 # Changelog
 
-## 0.2.0 (unreleased)
+## 2.0.0
+
+The first release of the rewrite, from the Armature2JSON repository. It replaces Armature2JSON 1.0.0 (tag
+v0.1.0) and takes over its extension id `armature2json`, so installing it replaces 1.0.0.
 
 ### Added
 - Plain-Python unit tests in `tests/unit`, run with `uv run pytest` and also by the Blender suite:
@@ -14,22 +17,26 @@
   so it lands where the bone is even when that parent keeps the reference's axes.
 - Mode choice in the sidebar panel and the export dialog: "From Armature" (as before) or "Merge into Reference
   JSON", with the reference JSON path and a "Reparented Bones" choice (Keep Reference Parent; Use Blender
-  Parent, Keep Placement; Use Blender Parent, Keep Values (Armature2JSON), as the old add-on did). Every option and choice has
-  a tooltip. Merge reports the number of added bones and warns about reference nodes with no bone and about
+  Parent, Keep Placement; Use Blender Parent, Keep Values (1.0.0), as Armature2JSON 1.0.0 did). Every option and
+  choice has a tooltip. Merge reports the number of added bones and warns about reference nodes with no bone and about
   reparented bones.
 - `tests/check_samples.py` also checks Merge into Reference JSON: it drops leaf nodes from the vanilla list, merges
   the armature back in, and compares the kept and re-added nodes with vanilla.
 - README: the two modes, a "Merge into Reference JSON" section with the reparent choices and the differences from
-  the old Armature2JSON add-on.
+  Armature2JSON 1.0.0.
 
 - Simplified Chinese (zh_HANS) interface, tooltips and messages (`src/core/i18n_zh_hans.py`), registered with
   `bpy.app.translations`. The table is checked for completeness and matching fields in
   `tests/unit/test_i18n.py`, and in Blender by `tests/test_i18n_blender.py`.
 
 ### Changed
-- Version 0.2.0 (`src/blender_manifest.toml`, `pyproject.toml`).
-- The sidebar tab and panel are now "FLVER Bone Nodes" and "FLVER Bone Node Export", naming what the add-on
-  builds (SoulsFormats' Bone node flag). The File > Export entry keeps FLVER_Editor's "Nodes JSON" name.
+- Version 2.0.0 (`src/blender_manifest.toml`, `pyproject.toml`).
+- Mark Root as Mesh Node is an add-on preference (`src/prefs.py`) instead of a scene setting, so Blender remembers
+  the choice between sessions. It also shows in the add-on's preferences.
+- Every name is Armature2JSON: extension id `armature2json`, the sidebar tab and panel, the command
+  `armature2json.export`, the scene settings `armature2json_*` and the pyproject package. The reference JSON
+  path keeps the setting name 1.0.0 used, so a saved path carries over. The File > Export entry keeps
+  FLVER_Editor's "Nodes JSON" name.
 - Every report and error text is a template in `src/core/messages.py`; core errors are `ExportError`, a
   `ValueError` that keeps its template and fields. The Blender test runner switches the interface to English
   for the run, since the tests check English messages.
@@ -37,7 +44,7 @@
 - `world_matrices` moved from `tests/check_samples.py` to `src/core/transforms.py`, with a new
   `node_local_matrix`.
 
-## 0.1.0 (unreleased)
+## Rewrite, first steps (not released)
 
 ### Added
 - Conversion from Blender bone transforms to FLVER node transforms (`src/core/transforms.py`): Y-up turn, Z
