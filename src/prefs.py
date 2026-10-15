@@ -1,5 +1,6 @@
-# The Mark Root as Mesh Node choice, kept as an add-on preference so Blender
-# remembers it between sessions (when it saves its preferences)
+# The Mark Root as Mesh Node and Vanilla Bone Orientations choices, kept as
+# add-on preferences so Blender remembers them between sessions (when it saves
+# its preferences)
 
 from typing import Optional
 
@@ -8,6 +9,7 @@ from bpy.props import BoolProperty
 
 # Used when the add-on has no preferences entry (for example in tests)
 DEFAULT_MARK_ROOT_AS_MESH = True
+DEFAULT_VANILLA_ORIENTATIONS = True
 
 
 class ARMATURE2JSON_preferences(bpy.types.AddonPreferences):
@@ -20,9 +22,17 @@ class ARMATURE2JSON_preferences(bpy.types.AddonPreferences):
                     "FLVER_Editor points every mesh it imports from FBX at node 0",
         default=DEFAULT_MARK_ROOT_AS_MESH,
     )
+    vanilla_orientations: BoolProperty(
+        name="Vanilla Bone Orientations",
+        description="Give bones with Elden Ring bone names their vanilla orientation, keeping "
+                    "their positions. Without ERCS, the game turns the mesh around any bone "
+                    "whose orientation differs from vanilla",
+        default=DEFAULT_VANILLA_ORIENTATIONS,
+    )
 
     def draw(self, context):
         self.layout.prop(self, "mark_root_as_mesh")
+        self.layout.prop(self, "vanilla_orientations")
 
 
 def get(context: bpy.types.Context) -> Optional[ARMATURE2JSON_preferences]:
@@ -60,3 +70,22 @@ def mark_root_as_mesh(context: bpy.types.Context) -> bool:
     """
     options = get(context)
     return options.mark_root_as_mesh if options is not None else DEFAULT_MARK_ROOT_AS_MESH
+
+
+def vanilla_orientations(context: bpy.types.Context) -> bool:
+    """
+    Read the Vanilla Bone Orientations choice.
+
+    Parameters
+    ----------
+    context : bpy.types.Context
+        Current Blender context.
+
+    Returns
+    -------
+    bool
+        The saved choice, or the default (on) when the add-on has no
+        preferences entry.
+    """
+    options = get(context)
+    return options.vanilla_orientations if options is not None else DEFAULT_VANILLA_ORIENTATIONS

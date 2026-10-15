@@ -5,8 +5,9 @@ import json
 from typing import Dict, Iterable, List, Tuple
 
 import bpy
+from mathutils import Matrix, Quaternion
 
-from . import bounds, files, hierarchy, merge, messages, transforms
+from . import bounds, files, hierarchy, merge, messages, transforms, vanilla_axes
 from .messages import ExportError
 
 FLAG_MESH = 4
@@ -50,10 +51,47 @@ def _xyz(vector: Iterable[float]) -> Dict[str, float]:
     return {'X': _number(x), 'Y': _number(y), 'Z': _number(z)}
 
 
+def with_vanilla_orientations(names: List[str], matrices: List[Matrix]) -> List[Matrix]:
+    """
+    Turn the nodes of vanilla bone names to their vanilla orientation.
+
+    Without ERCS, the game appears to skin equipment with the player's
+    animated bones and the FLVER's own bind pose, so a node whose orientation
+    differs from vanilla turns the mesh around it. Positions and scales are
+    kept, so the model keeps its own proportions; nodes of other names are
+    unchanged.
+
+    Parameters
+    ----------
+    names : list of str
+        Node names, one per matrix.
+    matrices : list of mathutils.Matrix
+        World matrices in FLVER space.
+
+    Returns
+    -------
+    list of mathutils.Matrix
+        New matrices: translation @ vanilla rotation @ scale for names in
+        :data:`vanilla_axes.ORIENTATIONS`, the same matrix otherwise.
+    """
+    result = []
+    for name, matrix in zip(names, matrices):
+        orientation = vanilla_axes.ORIENTATIONS.get(name)
+        if orientation is None:
+            result.append(matrix)
+            continue
+        translation, _, scale = matrix.decompose()
+        result.append(Matrix.Translation(translation)
+                      @ Quaternion(orientation).to_matrix().to_4x4()
+                      @ Matrix.Diagonal((*scale, 1.0)))
+    return result
+
+
 def build_nodes(armature_obj: bpy.types.Object,
                 length_axis: str = transforms.DEFAULT_LENGTH_AXIS,
                 roll_axis: str = transforms.DEFAULT_ROLL_AXIS,
-                mark_root_as_mesh: bool = True) -> List[dict]:
+                mark_root_as_mesh: bool = True,
+                vanilla_orientations: bool = True) -> List[dict]:
     """
     Build the FLVER node list for an armature.
 
@@ -67,6 +105,10 @@ def build_nodes(armature_obj: bpy.types.Object,
         Node axis that each bone's Z axis becomes, one of ``transforms.AXES``.
     mark_root_as_mesh : bool
         Write node 0 with Flags 12 (Mesh and Bone) instead of 8 (Bone).
+    vanilla_orientations : bool
+        Give every bone whose name is in :data:`vanilla_axes.ORIENTATIONS`
+        its vanilla world orientation, keeping its position and scale (see
+        :func:`with_vanilla_orientations`).
 
     Returns
     -------
@@ -92,6 +134,8 @@ def build_nodes(armature_obj: bpy.types.Object,
     matrices = [transforms.node_matrix(armature_obj.matrix_world,
                                        bone.matrix_local, axes)
                 for bone in bones]
+    if vanilla_orientations:
+        matrices = with_vanilla_orientations([b.name for b in bones], matrices)
     points = bounds.weighted_points(bounds.skinned_meshes(armature_obj),
                                     index_of.keys())
 

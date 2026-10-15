@@ -63,6 +63,13 @@ _INTERFACE = {
     "FLVER_Editor points every mesh it imports from FBX at node 0":
         "节点 0 的 Flags 写为 12（网格 + 骨骼），而不是 8（骨骼）。"
         "FLVER_Editor 从 FBX 导入的网格都会关联到节点 0",
+    # Vanilla orientations
+    "Vanilla Bone Orientations": "原版骨骼朝向",
+    "Give bones with Elden Ring bone names their vanilla orientation, keeping "
+    "their positions. Without ERCS, the game turns the mesh around any bone "
+    "whose orientation differs from vanilla":
+        "名称与艾尔登法环骨骼相同的骨骼使用原版朝向，位置保持不变。"
+        "不使用 ERCS 时，游戏会让网格绕朝向与原版不同的骨骼扭转",
 }
 _INTERFACE.update({f"Node {axis} axis": f"节点 {axis} 轴" for axis in _AXES})
 
