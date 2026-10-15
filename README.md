@@ -15,7 +15,7 @@ Version 2.0.0 is a rewrite of Armature2JSON 1.0.0: new maths, the From Armature 
    .\build.ps1
    ```
 
-   It runs Blender's own extension build, writes `dist\armature2json-2.0.0.zip` (the name follows `id` and `version` in `src\blender_manifest.toml`), and checks that the zip installs cleanly. If Blender lives elsewhere, pass its path: `.\build.ps1 -Blender "<path to blender.exe>"`. On a machine whose execution policy blocks scripts, run `powershell -ExecutionPolicy Bypass -File build.ps1` instead.
+   It runs Blender's own extension build, writes `dist\armature2json-2.1.0.zip` (the name follows `id` and `version` in `src\blender_manifest.toml`), and checks that the zip installs cleanly. If Blender lives elsewhere, pass its path: `.\build.ps1 -Blender "<path to blender.exe>"`. On a machine whose execution policy blocks scripts, run `powershell -ExecutionPolicy Bypass -File build.ps1` instead.
 2. In Blender: Edit > Preferences > Get Extensions, open the menu at the top right, choose "Install from Disk" and pick the zip.
 
 Without the script, zip the contents of the `src` folder by hand (not the folder itself, and without the `__pycache__` folders), so that `blender_manifest.toml` sits at the top of the zip.
@@ -45,8 +45,9 @@ Without the script, zip the contents of the `src` folder by hand (not the folder
 | Length Axis | The node axis that runs along each bone (in Merge, each added bone) | `X` |
 | Roll Axis | The node axis that each bone's Z axis becomes (in Merge, each added bone's) | `-Z` |
 | Mark Root as Mesh Node | From Armature only: write node 0 with Flags 12 (Mesh and Bone) instead of 8 (Bone) | on |
+| Vanilla Bone Orientations | From Armature only: give bones with Elden Ring bone names their vanilla orientation, keeping their positions (see [How bones become nodes](#how-bones-become-nodes)) | on |
 
-Each .blend file keeps its own options, except Mark Root as Mesh Node: it is an add-on preference, so Blender remembers it between sessions (when it saves its preferences, which it does at quit by default). It also shows in Edit > Preferences > Add-ons > Armature2JSON.
+Each .blend file keeps its own options, except Mark Root as Mesh Node and Vanilla Bone Orientations: they are add-on preferences, so Blender remembers them between sessions (when it saves its preferences, which it does at quit by default). They also show in Edit > Preferences > Add-ons > Armature2JSON.
 
 ## Warning: indices that FLVER Editor does not update
 
@@ -108,6 +109,8 @@ A node (one entry of the JSON list) is SoulsFormats' `FLVER.Node`. Each Blender 
 
 **Axes.** Blender always runs a bone along its own Y axis; vanilla FLVER bones run along their own X axis. The length and roll options set the conversion. For skeletons that came from FLVER Editor's FBX export, the defaults give the core bones (clavicles, upper arms, forearms, thighs, neck, fingers) their vanilla axes back, except where a Blender bone points at a different child than in the vanilla skeleton.
 
+**Vanilla orientations.** Without ERCS, the game appears to move equipment with the player's own bones, so a node whose orientation differs from the vanilla bone of the same name turns the mesh around that bone, and the model twists. With "Vanilla Bone Orientations" on, every bone whose name is in the built-in Elden Ring table (`src/core/vanilla_axes.py`, 280 bones) gets that vanilla orientation; its position and scale stay as in Blender, so the model keeps its proportions. Other bones keep their own position and orientation; only their values relative to a turned parent are recomputed. ERCS works with either setting.
+
 **Rotation.** Euler angles in radians, applied X, then Z, then Y, as SoulsFormats' `FLVER.Node.ComputeLocalTransform` expects. The angles are computed in double precision so that rotations close to gimbal lock stay exact.
 
 **Order.** Nodes are listed depth first: each parent comes before its children, and the children of one parent keep Blender's order. ParentIndex, FirstChildIndex, NextSiblingIndex and PreviousSiblingIndex are computed from that order; root nodes link to each other as siblings, as in vanilla node lists.
@@ -145,6 +148,14 @@ Run the tests that need no Blender (the pure logic in `tests/unit`, which import
 uv run pytest
 ```
 
+### Vanilla orientation table
+
+`src/core/vanilla_axes.py` is generated, not written by hand. `tools/make_vanilla_axes.py` reads the node list of vanilla FLVER files, leaves out Disabled nodes and their descendants, and writes each bone's world orientation in FLVER space. When several files have a bone, the first one wins, and the tool prints how far the others disagree. The current table comes from FC_F_0000, AM_F_0000, BD_M_1010, BD_M_1330, BD_M_1501, BD_M_1590, BD_M_2110, HD_M_1500 and HR_A_0006, unpacked from the game's `parts` folder:
+
+```
+uv run python tools/make_vanilla_axes.py src/core/vanilla_axes.py FC_F_0000.flver AM_F_0000.flver ...
+```
+
 ### Tests in Blender
 
 Run the full test suite inside Blender 4.5. It includes `tests/unit`, and it switches Blender's interface to English for the run (preferences are not saved), because the tests check English messages:
@@ -160,5 +171,7 @@ Compare the output with a vanilla node JSON saved next to a sample `.blend` unde
 ```
 
 The check passes when names and parents match, joint positions match within 1e-4, and every box, turned into the vanilla node's axes, matches within 1e-4. It also lists which core bones get their vanilla axes.
+
+It also exports with Vanilla Bone Orientations on (the comparison above uses it off) and checks that no joint moves by more than 1e-4 and that every turned node matches the table.
 
 It then checks Merge into Reference JSON: it drops the last 20 leaf nodes whose bones exist in Blender from the vanilla list and merges the armature back in. Every kept node must keep its vanilla values and parent, and every re-added node must come after the last node with Flags 8 or 10, with its joint position and box within 1e-4.
