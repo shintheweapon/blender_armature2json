@@ -46,6 +46,8 @@ Without the script, zip the contents of the `src` folder by hand (not the folder
 | Roll Axis | The node axis that each bone's Z axis becomes (in Merge, each added bone's) | `-Z` |
 | Mark Root as Mesh Node | From Armature only: write node 0 with Flags 12 (Mesh and Bone) instead of 8 (Bone) | on |
 
+**Reset Axes**, under the two axis options, sets them back to `X` and `-Z`.
+
 Each .blend file keeps its own options, except Mark Root as Mesh Node: it is an add-on preference, so Blender remembers it between sessions (when it saves its preferences, which it does at quit by default). It also shows in Edit > Preferences > Add-ons > Armature2JSON.
 
 ## Warning: indices that FLVER Editor does not update

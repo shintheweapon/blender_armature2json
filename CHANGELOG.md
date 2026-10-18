@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **Reset Axes** button under Length Axis and Roll Axis (sidebar panel and export dialog): sets them back to `X`
+  and `-Z`, the defaults, which match vanilla body bones. Ctrl+Z undoes it.
+
 ## 2.0.0
 
 The first release of the rewrite, from the Armature2JSON repository. It replaces Armature2JSON 1.0.0 (tag

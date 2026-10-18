@@ -2,6 +2,7 @@
 
 from .export_operator import (
     ARMATURE2JSON_OT_export,
+    ARMATURE2JSON_OT_reset_axes,
     classes,
     draw_options,
     find_armature,
@@ -10,6 +11,7 @@ from .export_operator import (
 
 __all__ = [
     'ARMATURE2JSON_OT_export',
+    'ARMATURE2JSON_OT_reset_axes',
     'classes',
     'draw_options',
     'find_armature',
