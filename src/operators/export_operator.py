@@ -46,7 +46,7 @@ def draw_options(layout: bpy.types.UILayout, context: bpy.types.Context) -> None
         Layout to draw into.
     context : bpy.types.Context
         Current Blender context: its scene holds most options, the add-on
-        preferences hold Mark Root as Mesh Node.
+        preferences hold Mark Root as Mesh Node and Vanilla Bone Orientations.
     """
     scene = context.scene
     layout.row().prop(scene, "armature2json_mode", expand=True)
@@ -61,6 +61,7 @@ def draw_options(layout: bpy.types.UILayout, context: bpy.types.Context) -> None
     options = prefs.get(context)
     if not merging and options is not None:
         layout.prop(options, "mark_root_as_mesh")
+        layout.prop(options, "vanilla_orientations")
 
 
 def _text(template: str, **fields) -> str:
@@ -154,6 +155,7 @@ class ARMATURE2JSON_OT_export(bpy.types.Operator, ExportHelper):
                 length_axis=scene.armature2json_length_axis,
                 roll_axis=scene.armature2json_roll_axis,
                 mark_root_as_mesh=prefs.mark_root_as_mesh(context),
+                vanilla_orientations=prefs.vanilla_orientations(context),
             )
             writer.write_nodes(self.filepath, nodes)
         except ValueError as error:
