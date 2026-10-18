@@ -61,8 +61,9 @@ class ChineseTests(unittest.TestCase):
         for panel in ui.classes:
             texts += [panel.bl_label, panel.bl_category, "No armature in the scene",
                       "Armature: {name}"]
-        operator = operators.ARMATURE2JSON_OT_export
-        texts += [operator.bl_label, operator.__doc__, "FLVER Nodes JSON (.json)"]
+        for operator in (operators.ARMATURE2JSON_OT_export, operators.ARMATURE2JSON_OT_reset_axes):
+            texts += [operator.bl_label, operator.__doc__]
+        texts.append("FLVER Nodes JSON (.json)")
         missing = [t for t in texts
                    if t not in UNTRANSLATED_NAMES and (i18n_zh_hans.DEFAULT, t) not in self.table]
         self.assertEqual(missing, [])
@@ -73,6 +74,7 @@ class ChineseTests(unittest.TestCase):
         self.assertEqual(tr.pgettext_iface("Reference JSON"), "参考 JSON")
         self.assertEqual(tr.pgettext_iface("Export FLVER Nodes JSON", "Operator"),
                          "导出 FLVER 节点 JSON")
+        self.assertEqual(tr.pgettext_iface("Reset Axes", "Operator"), "重置轴向")
         self.assertEqual(tr.pgettext_tip("Build every node from the armature. "
                                          "No reference JSON is needed"),
                          "所有节点都由骨架生成，不需要参考 JSON")

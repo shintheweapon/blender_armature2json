@@ -79,6 +79,9 @@ _OPERATOR = {
     "Export the armature's bones as a FLVER node JSON for FLVER_Editor":
         "把骨架中的骨骼导出为 FLVER_Editor 可读取的节点 JSON",
     "FLVER Nodes JSON (.json)": "FLVER 节点 JSON (.json)",
+    "Reset Axes": "重置轴向",
+    "Set Length Axis to X and Roll Axis to -Z, the defaults, which match vanilla body bones":
+        "把长度轴设为 X、扭转轴设为 -Z，即默认值，与原版身体骨骼一致",
 }
 
 _MESSAGES = {

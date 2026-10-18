@@ -8,7 +8,7 @@ from bpy.props import StringProperty
 from bpy_extras.io_utils import ExportHelper
 
 from .. import prefs
-from ..core import files, messages, writer
+from ..core import files, messages, transforms, writer
 
 # Names shown in a report message before the rest go to the system console
 REPORT_NAMES = 5
@@ -58,6 +58,7 @@ def draw_options(layout: bpy.types.UILayout, context: bpy.types.Context) -> None
     col = layout.column(align=True)
     col.prop(scene, "armature2json_length_axis")
     col.prop(scene, "armature2json_roll_axis")
+    col.operator(ARMATURE2JSON_OT_reset_axes.bl_idname, icon='LOOP_BACK')
     options = prefs.get(context)
     if not merging and options is not None:
         layout.prop(options, "mark_root_as_mesh")
@@ -211,6 +212,19 @@ class ARMATURE2JSON_OT_export(bpy.types.Operator, ExportHelper):
         return {'FINISHED'}
 
 
+class ARMATURE2JSON_OT_reset_axes(bpy.types.Operator):
+    """Set Length Axis to X and Roll Axis to -Z, the defaults, which match vanilla body bones"""
+    bl_idname = "armature2json.reset_axes"
+    bl_label = "Reset Axes"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        scene = context.scene
+        scene.armature2json_length_axis = transforms.DEFAULT_LENGTH_AXIS
+        scene.armature2json_roll_axis = transforms.DEFAULT_ROLL_AXIS
+        return {'FINISHED'}
+
+
 def menu_func_export(self, context):
     """Add the exporter to File > Export."""
     self.layout.operator(ARMATURE2JSON_OT_export.bl_idname,
@@ -219,4 +233,5 @@ def menu_func_export(self, context):
 
 classes = (
     ARMATURE2JSON_OT_export,
+    ARMATURE2JSON_OT_reset_axes,
 )

@@ -47,6 +47,8 @@ Without the script, zip the contents of the `src` folder by hand (not the folder
 | Mark Root as Mesh Node | From Armature only: write node 0 with Flags 12 (Mesh and Bone) instead of 8 (Bone) | on |
 | Vanilla Bone Orientations | From Armature only: give bones with Elden Ring bone names their vanilla orientation, keeping their positions (see [How bones become nodes](#how-bones-become-nodes)) | on |
 
+**Reset Axes**, under the two axis options, sets them back to `X` and `-Z`.
+
 Each .blend file keeps its own options, except Mark Root as Mesh Node and Vanilla Bone Orientations: they are add-on preferences, so Blender remembers them between sessions (when it saves its preferences, which it does at quit by default). They also show in Edit > Preferences > Add-ons > Armature2JSON.
 
 ## Warning: indices that FLVER Editor does not update
