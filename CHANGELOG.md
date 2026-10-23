@@ -1,6 +1,8 @@
 # Changelog
 
-## 2.1.0 (unreleased)
+## 2.2.0 (unreleased)
+
+2.1.0 was never published; its changes are part of 2.2.0.
 
 ### Added
 - **Coordinate Space** option (sidebar panel and export dialog, kept per .blend file): **Blender World (Convert to FS)**,
@@ -24,7 +26,7 @@
 ### Changed
 - **Mark Root as Mesh Node** is off by default. Blender keeps a choice you made before, since it stores a preference
   only once it has been set.
-- Version 2.1.0 (`src/blender_manifest.toml`, `pyproject.toml`, `uv.lock`).
+- Version 2.2.0 (`src/blender_manifest.toml`, `pyproject.toml`, `uv.lock`).
 
 ## 2.0.0
 

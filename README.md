@@ -15,7 +15,7 @@ Version 2.0.0 is a rewrite of Armature2JSON 1.0.0: new maths, the From Armature 
    .\build.ps1
    ```
 
-   It runs Blender's own extension build, writes `dist\armature2json-2.1.0.zip` (the name follows `id` and `version` in `src\blender_manifest.toml`), and checks that the zip installs cleanly. If Blender lives elsewhere, pass its path: `.\build.ps1 -Blender "<path to blender.exe>"`. On a machine whose execution policy blocks scripts, run `powershell -ExecutionPolicy Bypass -File build.ps1` instead.
+   It runs Blender's own extension build, writes `dist\armature2json-2.2.0.zip` (the name follows `id` and `version` in `src\blender_manifest.toml`), and checks that the zip installs cleanly. If Blender lives elsewhere, pass its path: `.\build.ps1 -Blender "<path to blender.exe>"`. On a machine whose execution policy blocks scripts, run `powershell -ExecutionPolicy Bypass -File build.ps1` instead.
 2. In Blender: Edit > Preferences > Get Extensions, open the menu at the top right, choose "Install from Disk" and pick the zip.
 
 Without the script, zip the contents of the `src` folder by hand (not the folder itself, and without the `__pycache__` folders), so that `blender_manifest.toml` sits at the top of the zip.
@@ -50,7 +50,7 @@ Without the script, zip the contents of the `src` folder by hand (not the folder
 
 **Reset Axes**, under the two axis options, sets them back to `X` and `-Z`. **As Imported**, next to it, sets them to `Y` and `Z`: each node keeps its bone's own axes.
 
-Each .blend file keeps its own options, except Vanilla Reference JSON and Mark Root as Mesh Node: they are add-on preferences, so Blender remembers them between sessions (when it saves its preferences, which it does at quit by default). They also show in Edit > Preferences > Add-ons > Armature2JSON. Blender stores a preference only once it has been set: Mark Root as Mesh Node is off by default since 2.1.0, and a choice you made before stays.
+Each .blend file keeps its own options, except Vanilla Reference JSON and Mark Root as Mesh Node: they are add-on preferences, so Blender remembers them between sessions (when it saves its preferences, which it does at quit by default). They also show in Edit > Preferences > Add-ons > Armature2JSON. Blender stores a preference only once it has been set: Mark Root as Mesh Node is off by default since 2.2.0, and a choice you made before stays.
 
 ## Vanilla orientations on the armature
 
@@ -108,7 +108,7 @@ A bone cannot be reparented under an added bone, because added bones come after 
 | Rotation | Single-precision `asin` | Double-precision `atan2`, exact near gimbal lock |
 | Bounding box | Zero | From the weighted vertices |
 
-On three sample characters, the 1.0.0 maths reproduces the vanilla joint positions for only part of the bones, while 2.0.0 matches them all. Since 2.1.0, the Coordinate Space option Armature Space = FS Space reads the armature's space as 1.0.0 did.
+On three sample characters, the 1.0.0 maths reproduces the vanilla joint positions for only part of the bones, while 2.0.0 matches them all. Since 2.2.0, the Coordinate Space option Armature Space = FS Space reads the armature's space as 1.0.0 did.
 
 ## Fix the SkeletonSet after Load JSON
 
