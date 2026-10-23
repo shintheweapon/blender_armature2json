@@ -17,6 +17,7 @@ PARENT_AFTER_CHILD = (
     "reference's bones. Choose 'Keep Reference Parent' or move the bone back.")
 UNKNOWN_REPARENT = "Unknown reparent choice '{choice}'. Expected one of {choices}."
 UNKNOWN_AXIS = "Unknown axis '{name}'. Expected one of {axes}."
+UNKNOWN_SPACE = "Unknown coordinate space '{name}'. Expected one of {spaces}."
 SAME_LINE_AXES = "Length axis '{length}' and roll axis '{roll}' must be different lines."
 PARENTS_FIRST = "Node {index} has parent {parent}; parents must come first."
 

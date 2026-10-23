@@ -55,6 +55,7 @@ def draw_options(layout: bpy.types.UILayout, context: bpy.types.Context) -> None
         col = layout.column(align=True)
         col.prop(scene, "armature2json_input_path")
         col.prop(scene, "armature2json_reparent")
+    layout.prop(scene, "armature2json_space")
     col = layout.column(align=True)
     col.prop(scene, "armature2json_length_axis")
     col.prop(scene, "armature2json_roll_axis")
@@ -157,6 +158,7 @@ class ARMATURE2JSON_OT_export(bpy.types.Operator, ExportHelper):
                 roll_axis=scene.armature2json_roll_axis,
                 mark_root_as_mesh=prefs.mark_root_as_mesh(context),
                 vanilla_orientations=prefs.vanilla_orientations(context),
+                space=scene.armature2json_space,
             )
             writer.write_nodes(self.filepath, nodes)
         except ValueError as error:
@@ -193,6 +195,7 @@ class ARMATURE2JSON_OT_export(bpy.types.Operator, ExportHelper):
                 length_axis=scene.armature2json_length_axis,
                 roll_axis=scene.armature2json_roll_axis,
                 reparent=scene.armature2json_reparent,
+                space=scene.armature2json_space,
             )
             writer.write_nodes(self.filepath, nodes)
         except ValueError as error:

@@ -42,6 +42,7 @@ Without the script, zip the contents of the `src` folder by hand (not the folder
 | Mode | From Armature, or Merge into Reference JSON | From Armature |
 | Reference JSON | Merge only: the node JSON used as the reference (usually a vanilla one) | empty |
 | Reparented Bones | Merge only: what to do with reference bones that have another parent in Blender (see [Merge into Reference JSON](#merge-into-reference-json)) | Keep Reference Parent |
+| Coordinate Space | How Blender coordinates become FS (FLVER) coordinates: Blender World (Convert to FS) or Armature Space = FS Space (see [How bones become nodes](#how-bones-become-nodes)) | Blender World (Convert to FS) |
 | Length Axis | The node axis that runs along each bone (in Merge, each added bone) | `X` |
 | Roll Axis | The node axis that each bone's Z axis becomes (in Merge, each added bone's) | `-Z` |
 | Mark Root as Mesh Node | From Armature only: write node 0 with Flags 12 (Mesh and Bone) instead of 8 (Bone) | on |
@@ -87,7 +88,7 @@ A bone cannot be reparented under an added bone, because added bones come after 
 | Rotation | Single-precision `asin` | Double-precision `atan2`, exact near gimbal lock |
 | Bounding box | Zero | From the weighted vertices |
 
-On three sample characters, the 1.0.0 maths reproduces the vanilla joint positions for only part of the bones, while 2.0.0 matches them all.
+On three sample characters, the 1.0.0 maths reproduces the vanilla joint positions for only part of the bones, while 2.0.0 matches them all. Since 2.1.0, the Coordinate Space option Armature Space = FS Space reads the armature's space as 1.0.0 did.
 
 ## Fix the SkeletonSet after Load JSON
 
@@ -107,7 +108,10 @@ The tool only needs Python 3. It refuses files it cannot fix safely: big-endian 
 
 A node (one entry of the JSON list) is SoulsFormats' `FLVER.Node`. Each Blender bone becomes one node.
 
-**Position.** FLVER space is Blender space turned so that Y points up, then mirrored along Z: a point at Blender (x, y, z) lands at FLVER (x, z, y). The armature object's own transform is included.
+**Position.** FS space (FLVER space) is the game's: Y up, the character faces -Z, and its left is +X. The Coordinate Space option sets how Blender coordinates become FS coordinates:
+
+- **Blender World (Convert to FS)**, the default: the armature as it stands in Blender's world, Z up, including the armature object's transform and its parents. It is turned so that Y points up, then mirrored along Z: a point at Blender (x, y, z) lands at FS (x, z, y). This suits armatures that stand upright in Blender, such as those from the FLVER importer.
+- **Armature Space = FS Space**: the armature's own coordinates are taken to be FS coordinates already and are written unchanged; the armature object's transform is ignored. Tlarok's script and FLVER Bones Adder read armatures this way. An armature imported from an FBX of a FLVER lies on its back in Blender, because its coordinates already are FS coordinates.
 
 **Axes.** Blender always runs a bone along its own Y axis; vanilla FLVER bones run along their own X axis. The length and roll options set the conversion. For skeletons that came from FLVER Editor's FBX export, the defaults give the core bones (clavicles, upper arms, forearms, thighs, neck, fingers) their vanilla axes back, except where a Blender bone points at a different child than in the vanilla skeleton.
 

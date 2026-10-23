@@ -1,6 +1,7 @@
 # Transforms between Blender armature space and FLVER node space
 
 import math
+from dataclasses import dataclass
 from typing import List, Optional, Sequence, Tuple
 
 from mathutils import Euler, Matrix, Vector
@@ -17,6 +18,62 @@ DEFAULT_ROLL_AXIS = '-Z'
 # FLVER space is Blender space turned Y-up and mirrored along Z
 Y_UP = Matrix.Rotation(-math.pi / 2.0, 4, 'X')
 MIRROR_Z = Matrix.Diagonal((1.0, 1.0, -1.0, 1.0))
+
+# Choices for the Coordinate Space option: how Blender coordinates become FLVER
+# (FS) coordinates. BLENDER_WORLD converts the armature as it stands in
+# Blender's world (Z up); ARMATURE writes the armature's own coordinates as
+# they are, taking them to be FS coordinates already
+SPACES = ('BLENDER_WORLD', 'ARMATURE')
+DEFAULT_SPACE = 'BLENDER_WORLD'
+
+
+@dataclass(frozen=True)
+class Space:
+    """
+    A mapping from Blender coordinates to FLVER space.
+
+    A node's matrix is ``to_flver @ world @ tail @ axes`` and a point's is
+    ``to_flver @ world @ point``, where ``world`` places the bone or the
+    vertex in Blender's world.
+
+    Attributes
+    ----------
+    to_flver : mathutils.Matrix
+        Takes Blender world coordinates to FLVER coordinates.
+    tail : mathutils.Matrix
+        Applied to the bone's own axes before the change of axes.
+    """
+    to_flver: Matrix
+    tail: Matrix
+
+
+def space_mapping(name: str, armature_world: Matrix) -> Space:
+    """
+    Build the mapping for a Coordinate Space choice.
+
+    Parameters
+    ----------
+    name : str
+        One of ``SPACES``.
+    armature_world : mathutils.Matrix
+        The armature object's ``matrix_world``.
+
+    Returns
+    -------
+    Space
+        ``BLENDER_WORLD``: turned Y up and mirrored along Z.
+        ``ARMATURE``: back into the armature's own space, unchanged.
+
+    Raises
+    ------
+    ValueError
+        If ``name`` is not one of ``SPACES``.
+    """
+    if name == 'BLENDER_WORLD':
+        return Space(MIRROR_Z @ Y_UP, MIRROR_Z.copy())
+    if name == 'ARMATURE':
+        return Space(armature_world.inverted(), Matrix.Identity(4))
+    raise ExportError(messages.UNKNOWN_SPACE, name=name, spaces=str(SPACES))
 
 _AXIS_VECTORS = {
     'X': Vector((1.0, 0.0, 0.0)),
@@ -68,13 +125,15 @@ def axis_matrix(length_axis: str = DEFAULT_LENGTH_AXIS,
     return bone_to_node.transposed().to_4x4()
 
 
-def node_matrix(armature_matrix: Matrix, bone_matrix: Matrix,
+def node_matrix(space: Space, armature_matrix: Matrix, bone_matrix: Matrix,
                 axes: Matrix) -> Matrix:
     """
     Compute a node's matrix in FLVER space from a Blender bone.
 
     Parameters
     ----------
+    space : Space
+        The Coordinate Space mapping, from :func:`space_mapping`.
     armature_matrix : mathutils.Matrix
         The armature object's ``matrix_world``.
     bone_matrix : mathutils.Matrix
@@ -85,18 +144,21 @@ def node_matrix(armature_matrix: Matrix, bone_matrix: Matrix,
     Returns
     -------
     mathutils.Matrix
-        4x4 node matrix in FLVER space.
+        4x4 node matrix in FLVER space: in ``BLENDER_WORLD``, the bone in
+        Blender's world turned Y up and mirrored along Z; in ``ARMATURE``,
+        ``bone_matrix @ axes``.
     """
-    blender_world = Y_UP @ armature_matrix @ bone_matrix
-    return MIRROR_Z @ blender_world @ MIRROR_Z @ axes
+    return space.to_flver @ armature_matrix @ bone_matrix @ space.tail @ axes
 
 
-def point_to_flver(world_matrix: Matrix, point: Vector) -> Vector:
+def point_to_flver(space: Space, world_matrix: Matrix, point: Vector) -> Vector:
     """
     Convert a point from an object's local space to FLVER space.
 
     Parameters
     ----------
+    space : Space
+        The Coordinate Space mapping, from :func:`space_mapping`.
     world_matrix : mathutils.Matrix
         The object's ``matrix_world``.
     point : mathutils.Vector
@@ -107,7 +169,7 @@ def point_to_flver(world_matrix: Matrix, point: Vector) -> Vector:
     mathutils.Vector
         The point in FLVER space.
     """
-    return MIRROR_Z @ Y_UP @ world_matrix @ point
+    return space.to_flver @ world_matrix @ point
 
 
 def local_trs(parent: Optional[Matrix],

@@ -5,7 +5,7 @@ from typing import Dict, Iterable, List, Optional, Tuple
 import bpy
 from mathutils import Matrix, Vector
 
-from .transforms import point_to_flver
+from .transforms import Space, point_to_flver
 
 Box = Tuple[Vector, Vector]
 
@@ -31,7 +31,8 @@ def skinned_meshes(armature_obj: bpy.types.Object) -> List[bpy.types.Object]:
 
 
 def weighted_points(meshes: Iterable[bpy.types.Object],
-                    bone_names: Iterable[str]) -> Dict[str, List[Vector]]:
+                    bone_names: Iterable[str],
+                    space: Space) -> Dict[str, List[Vector]]:
     """
     Collect, per bone, the vertices weighted to it, in FLVER space.
 
@@ -44,6 +45,8 @@ def weighted_points(meshes: Iterable[bpy.types.Object],
         Mesh objects to read.
     bone_names : iterable of str
         Bones to collect points for; other vertex groups are skipped.
+    space : Space
+        The Coordinate Space mapping, from :func:`transforms.space_mapping`.
 
     Returns
     -------
@@ -63,7 +66,7 @@ def weighted_points(meshes: Iterable[bpy.types.Object],
                 if element.weight <= 0.0 or name not in wanted:
                     continue
                 if position is None:
-                    position = point_to_flver(matrix, vertex.co)
+                    position = point_to_flver(space, matrix, vertex.co)
                 points.setdefault(name, []).append(position)
     return points
 

@@ -6,11 +6,12 @@ import os
 import tempfile
 import unittest
 
+import bpy
 from mathutils import Quaternion
 
 import helpers
 from src.core import vanilla_axes, writer
-from src.core.transforms import point_to_flver, world_matrices
+from src.core.transforms import point_to_flver, space_mapping, world_matrices
 
 
 def two_bone_armature():
@@ -102,7 +103,8 @@ class VanillaOrientationTests(unittest.TestCase):
         box_max = self.turned[i]['BoundingBoxMax']
         inverse = self.turned_worlds[i].inverted()
         for vertex in self.box.data.vertices:
-            local = inverse @ point_to_flver(self.box.matrix_world, vertex.co)
+            local = inverse @ point_to_flver(space_mapping('BLENDER_WORLD', self.arm.matrix_world),
+                                             self.box.matrix_world, vertex.co)
             for k, axis in enumerate('XYZ'):
                 self.assertGreaterEqual(local[k], box_min[axis] - 1e-5)
                 self.assertLessEqual(local[k], box_max[axis] + 1e-5)
@@ -129,6 +131,62 @@ class FlagsTests(unittest.TestCase):
     def test_non_armature_raises(self):
         with self.assertRaises(ValueError):
             writer.build_nodes(None)
+
+
+class ArmatureSpaceTests(unittest.TestCase):
+    """Coordinate Space 'Armature Space = FS Space': the armature's own coordinates."""
+
+    def setUp(self):
+        helpers.new_scene()
+        self.arm = helpers.make_armature([
+            ('Root', None, (0.0, 0.9, 0.0), (0.0, 1.2, 0.0), 0.0),
+            ('Head', 'Root', (0.0, 1.2, 0.0), (0.0, 1.5, 0.1), 0.3),
+        ])
+        self.box = helpers.make_skinned_box(self.arm, 'Head', (0.2, 0.3, 0.1))
+
+    def export(self, **options):
+        return writer.build_nodes(self.arm, space='ARMATURE', mark_root_as_mesh=False,
+                                  vanilla_orientations=False, **options)
+
+    def test_root_position_is_the_armature_space_head(self):
+        root = self.export()[0]
+        for axis, value in zip('XYZ', (0.0, 0.9, 0.0)):
+            self.assertAlmostEqual(root['Translation'][axis], value, places=6)
+
+    def test_object_transform_is_ignored(self):
+        plain = self.export()
+        self.arm.rotation_euler = (math.pi / 2, 0.0, 0.5)
+        self.arm.location = (1.0, 2.0, 3.0)
+        bpy.context.view_layer.update()
+        # The mesh moves with the armature, as a child object would
+        self.box.matrix_world = self.arm.matrix_world.copy()
+        bpy.context.view_layer.update()
+        turned = self.export()
+        for a, b in zip(plain, turned):
+            for key in ('Translation', 'Rotation', 'BoundingBoxMin', 'BoundingBoxMax'):
+                for axis in 'XYZ':
+                    self.assertAlmostEqual(a[key][axis], b[key][axis], places=5, msg=(a['Name'], key))
+
+    def test_boxes_hold_the_weighted_points(self):
+        nodes = self.export()
+        worlds = world_matrices(nodes)
+        i = [n['Name'] for n in nodes].index('Head')
+        space = space_mapping('ARMATURE', self.arm.matrix_world)
+        inverse = worlds[i].inverted()
+        for vertex in self.box.data.vertices:
+            local = inverse @ point_to_flver(space, self.box.matrix_world, vertex.co)
+            for k, axis in enumerate('XYZ'):
+                self.assertGreaterEqual(local[k], nodes[i]['BoundingBoxMin'][axis] - 1e-5)
+                self.assertLessEqual(local[k], nodes[i]['BoundingBoxMax'][axis] + 1e-5)
+
+    def test_merge_adds_bones_in_armature_space(self):
+        full = self.export()
+        partial = [dict(full[0], FirstChildIndex=-1)]
+        nodes, _ = writer.merge_nodes(self.arm, partial, space='ARMATURE')
+        added = [n for n in nodes if n['Name'] == 'Head'][0]
+        for key in ('Translation', 'Rotation'):
+            for axis in 'XYZ':
+                self.assertAlmostEqual(added[key][axis], full[1][key][axis], places=5)
 
 
 class OutputTests(unittest.TestCase):

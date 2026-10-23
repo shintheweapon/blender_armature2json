@@ -50,6 +50,25 @@ _INTERFACE = {
     "Use the Blender parent but keep the values relative to the old parent, as "
     "Armature2JSON 1.0.0 did. The bone can move":
         "改用 Blender 中的父级，但数值仍按原父级计算，与 Armature2JSON 1.0.0 相同。骨骼可能会错位",
+    # Coordinate Space
+    "Coordinate Space": "坐标空间",
+    "How Blender coordinates become FS (FLVER) coordinates. FS space is the game's: Y up, "
+    "the character faces -Z, its left is +X. Pick the one that matches how the armature got "
+    "into Blender":
+        "Blender 坐标如何转换为 FS（FLVER）坐标。FS 空间即游戏的坐标：Y 朝上，角色面朝 -Z，"
+        "左手在 +X。请按骨架导入 Blender 的方式选择",
+    "Blender World (Convert to FS)": "Blender 世界（转换为 FS 空间）",
+    "The armature as it stands in Blender's world, Z up, including its object and parent "
+    "transforms. It's converted to FS space: turned Y up and mirrored on Z. For armatures "
+    "that stand upright in Blender, such as those from the FLVER importer":
+        "按骨架在 Blender 世界中的样子读取（Z 朝上，包括物体和父级变换），再转换为 FS 空间："
+        "转为 Y 朝上并沿 Z 镜像。适用于在 Blender 中直立的骨架，例如 FLVER 导入器导入的骨架",
+    "Armature Space = FS Space": "骨架空间 = FS 空间",
+    "The armature's own coordinates are already FS coordinates and are written unchanged, "
+    "with no conversion or mirroring; the object's transform is ignored. Tlarok's script and "
+    "FLVER Bones Adder read armatures this way":
+        "骨架自身的坐标已经是 FS 坐标，原样写出：不转换、不镜像，忽略物体变换。"
+        "Tlarok 的脚本和 FLVER Bones Adder 都这样读取骨架",
     # Axes
     "Length Axis": "长度轴",
     "Node axis that runs along each bone. Vanilla skeletons use the X axis":
@@ -99,6 +118,7 @@ _MESSAGES = {
         "或在 Blender 中把它的父级改回原来的骨骼。",
     messages.UNKNOWN_REPARENT: "未知的父级处理方式“{choice}”，可选：{choices}。",
     messages.UNKNOWN_AXIS: "未知的轴“{name}”，可选：{axes}。",
+    messages.UNKNOWN_SPACE: "未知的坐标空间“{name}”，可选：{spaces}。",
     messages.SAME_LINE_AXES: "长度轴“{length}”和扭转轴“{roll}”不能在同一条直线上。",
     messages.PARENTS_FIRST: "编号 {index} 的节点的父级是 {parent}，但父级必须排在它前面。",
     messages.EXPORTED: "已从骨架“{armature}”导出 {count} 个节点到 {path}",
