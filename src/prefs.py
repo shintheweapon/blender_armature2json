@@ -1,15 +1,14 @@
-# The Mark Root as Mesh Node and Vanilla Bone Orientations choices, kept as
+# The Vanilla Reference JSON path and the Mark Root as Mesh Node choice, kept as
 # add-on preferences so Blender remembers them between sessions (when it saves
 # its preferences)
 
 from typing import Optional
 
 import bpy
-from bpy.props import BoolProperty
+from bpy.props import BoolProperty, StringProperty
 
 # Used when the add-on has no preferences entry (for example in tests)
-DEFAULT_MARK_ROOT_AS_MESH = True
-DEFAULT_VANILLA_ORIENTATIONS = True
+DEFAULT_MARK_ROOT_AS_MESH = False
 
 
 class ARMATURE2JSON_preferences(bpy.types.AddonPreferences):
@@ -18,21 +17,23 @@ class ARMATURE2JSON_preferences(bpy.types.AddonPreferences):
 
     mark_root_as_mesh: BoolProperty(
         name="Mark Root as Mesh Node",
-        description="Write node 0 with Flags 12 (Mesh and Bone) instead of 8 (Bone). "
-                    "FLVER_Editor points every mesh it imports from FBX at node 0",
+        description="Off by default. When on, node 0 is written with Flags 12 (Mesh and Bone) "
+                    "instead of 8 (Bone). FLVER_Editor points every mesh it imports from FBX at "
+                    "node 0",
         default=DEFAULT_MARK_ROOT_AS_MESH,
     )
-    vanilla_orientations: BoolProperty(
-        name="Vanilla Bone Orientations",
-        description="Give bones with Elden Ring bone names their vanilla orientation, keeping "
-                    "their positions. Without ERCS, the game turns the mesh around any bone "
-                    "whose orientation differs from vanilla",
-        default=DEFAULT_VANILLA_ORIENTATIONS,
+    vanilla_reference_path: StringProperty(
+        name="Vanilla Reference JSON",
+        description="Node JSON of the vanilla character skeleton, whose axes the game's "
+                    "animations use: export it from chr\\c0000-chrbnd-dcx\\c0000.flver with "
+                    "FLVER Editor (Nodes.json). Remembered between sessions",
+        subtype='FILE_PATH',
+        default="",
     )
 
     def draw(self, context):
+        self.layout.prop(self, "vanilla_reference_path")
         self.layout.prop(self, "mark_root_as_mesh")
-        self.layout.prop(self, "vanilla_orientations")
 
 
 def get(context: bpy.types.Context) -> Optional[ARMATURE2JSON_preferences]:
@@ -65,16 +66,16 @@ def mark_root_as_mesh(context: bpy.types.Context) -> bool:
     Returns
     -------
     bool
-        The saved choice, or the default (on) when the add-on has no
+        The saved choice, or the default (off) when the add-on has no
         preferences entry.
     """
     options = get(context)
     return options.mark_root_as_mesh if options is not None else DEFAULT_MARK_ROOT_AS_MESH
 
 
-def vanilla_orientations(context: bpy.types.Context) -> bool:
+def vanilla_reference_path(context: bpy.types.Context) -> str:
     """
-    Read the Vanilla Bone Orientations choice.
+    Read the remembered Vanilla Reference JSON path.
 
     Parameters
     ----------
@@ -83,9 +84,9 @@ def vanilla_orientations(context: bpy.types.Context) -> bool:
 
     Returns
     -------
-    bool
-        The saved choice, or the default (on) when the add-on has no
-        preferences entry.
+    str
+        The saved path, or an empty string when none is set or the add-on
+        has no preferences entry.
     """
     options = get(context)
-    return options.vanilla_orientations if options is not None else DEFAULT_VANILLA_ORIENTATIONS
+    return options.vanilla_reference_path if options is not None else ""

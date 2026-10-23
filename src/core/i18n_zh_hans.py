@@ -50,6 +50,25 @@ _INTERFACE = {
     "Use the Blender parent but keep the values relative to the old parent, as "
     "Armature2JSON 1.0.0 did. The bone can move":
         "改用 Blender 中的父级，但数值仍按原父级计算，与 Armature2JSON 1.0.0 相同。骨骼可能会错位",
+    # Coordinate Space
+    "Coordinate Space": "坐标空间",
+    "How Blender coordinates become FS (FLVER) coordinates. FS space is the game's: Y up, "
+    "the character faces -Z, its left is +X. Pick the one that matches how the armature got "
+    "into Blender":
+        "Blender 坐标如何转换为 FS（FLVER）坐标。FS 空间即游戏的坐标：Y 朝上，角色面朝 -Z，"
+        "左手在 +X。请按骨架导入 Blender 的方式选择",
+    "Blender World (Convert to FS)": "Blender 世界（转换为 FS 空间）",
+    "The armature as it stands in Blender's world, Z up, including its object and parent "
+    "transforms. It's converted to FS space: turned Y up and mirrored on Z. For armatures "
+    "that stand upright in Blender, such as those from the FLVER importer":
+        "按骨架在 Blender 世界中的样子读取（Z 朝上，包括物体和父级变换），再转换为 FS 空间："
+        "转为 Y 朝上并沿 Z 镜像。适用于在 Blender 中直立的骨架，例如 FLVER 导入器导入的骨架",
+    "Armature Space = FS Space": "骨架空间 = FS 空间",
+    "The armature's own coordinates are already FS coordinates and are written unchanged, "
+    "with no conversion or mirroring; the object's transform is ignored. Tlarok's script and "
+    "FLVER Bones Adder read armatures this way":
+        "骨架自身的坐标已经是 FS 坐标，原样写出：不转换、不镜像，忽略物体变换。"
+        "Tlarok 的脚本和 FLVER Bones Adder 都这样读取骨架",
     # Axes
     "Length Axis": "长度轴",
     "Node axis that runs along each bone. Vanilla skeletons use the X axis":
@@ -59,17 +78,17 @@ _INTERFACE = {
         "骨骼 Z 轴对应的节点轴。选 -Z 时，原版核心骨骼的轴向与原版一致",
     # Root flag
     "Mark Root as Mesh Node": "根节点同时标记为网格",
-    "Write node 0 with Flags 12 (Mesh and Bone) instead of 8 (Bone). "
-    "FLVER_Editor points every mesh it imports from FBX at node 0":
-        "节点 0 的 Flags 写为 12（网格 + 骨骼），而不是 8（骨骼）。"
+    "Off by default. When on, node 0 is written with Flags 12 (Mesh and Bone) instead of 8 "
+    "(Bone). FLVER_Editor points every mesh it imports from FBX at node 0":
+        "默认关闭。开启时，节点 0 的 Flags 写为 12（网格 + 骨骼），而不是 8（骨骼）。"
         "FLVER_Editor 从 FBX 导入的网格都会关联到节点 0",
-    # Vanilla orientations
-    "Vanilla Bone Orientations": "原版骨骼朝向",
-    "Give bones with Elden Ring bone names their vanilla orientation, keeping "
-    "their positions. Without ERCS, the game turns the mesh around any bone "
-    "whose orientation differs from vanilla":
-        "名称与艾尔登法环骨骼相同的骨骼使用原版朝向，位置保持不变。"
-        "不使用 ERCS 时，游戏会让网格绕朝向与原版不同的骨骼扭转",
+    # Vanilla orientations on the armature
+    "Vanilla Reference JSON": "原版参考 JSON",
+    "Node JSON of the vanilla character skeleton, whose axes the game's animations use: "
+    "export it from chr\\c0000-chrbnd-dcx\\c0000.flver with FLVER Editor (Nodes.json). "
+    "Remembered between sessions":
+        "原版角色骨架的节点 JSON，游戏动画使用它的轴向：用 FLVER Editor 从 "
+        "chr\\c0000-chrbnd-dcx\\c0000.flver 导出（Nodes.json）。会在会话之间记住",
 }
 _INTERFACE.update({f"Node {axis} axis": f"节点 {axis} 轴" for axis in _AXES})
 
@@ -80,8 +99,23 @@ _OPERATOR = {
         "把骨架中的骨骼导出为 FLVER_Editor 可读取的节点 JSON",
     "FLVER Nodes JSON (.json)": "FLVER 节点 JSON (.json)",
     "Reset Axes": "重置轴向",
-    "Set Length Axis to X and Roll Axis to -Z, the defaults, which match vanilla body bones":
-        "把长度轴设为 X、扭转轴设为 -Z，即默认值，与原版身体骨骼一致",
+    "Length X, Roll -Z (default). In game, each bone gets vanilla-style axes worked out from "
+    "its Blender direction. Can disagree with a custom Havok skeleton":
+        "长度 X、扭转 -Z（默认）。游戏中每根骨骼的轴向按其在 Blender 中的方向推算成原版式样。"
+        "可能与自定义 Havok 骨架不一致",
+    "As Imported": "按导入原样",
+    "Length Y, Roll Z. In game, each bone keeps exactly its Blender axes, the same axes a "
+    "custom Havok skeleton gets. Use after Match Vanilla Orientations":
+        "长度 Y、扭转 Z。游戏中每根骨骼完全保持其 Blender 轴向，与自定义 Havok 骨架得到的轴向相同。"
+        "请在匹配原版朝向之后使用",
+    "Match Vanilla Orientations": "匹配原版朝向",
+    "Turn the bones that have vanilla names to the vanilla skeleton's axes, keeping each "
+    "bone's head and length; other bones stay as they are. Uses the Coordinate Space and axes "
+    "below. Do it before exporting the FBX for Havok, so the physics skeleton gets the same "
+    "axes. Ctrl+Z undoes it":
+        "将带原版名称的骨骼转为原版骨架的轴向，保留每根骨骼的头部位置和长度；其他骨骼不变。"
+        "使用下方的坐标空间和轴向。请在为 Havok 导出 FBX 之前进行，使物理骨架得到相同的轴向。"
+        "可用 Ctrl+Z 撤销",
 }
 
 _MESSAGES = {
@@ -99,6 +133,7 @@ _MESSAGES = {
         "或在 Blender 中把它的父级改回原来的骨骼。",
     messages.UNKNOWN_REPARENT: "未知的父级处理方式“{choice}”，可选：{choices}。",
     messages.UNKNOWN_AXIS: "未知的轴“{name}”，可选：{axes}。",
+    messages.UNKNOWN_SPACE: "未知的坐标空间“{name}”，可选：{spaces}。",
     messages.SAME_LINE_AXES: "长度轴“{length}”和扭转轴“{roll}”不能在同一条直线上。",
     messages.PARENTS_FIRST: "编号 {index} 的节点的父级是 {parent}，但父级必须排在它前面。",
     messages.EXPORTED: "已从骨架“{armature}”导出 {count} 个节点到 {path}",
@@ -113,6 +148,9 @@ _MESSAGES = {
     messages.CANNOT_READ: "无法读取参考 JSON：{error}",
     messages.NOT_JSON: "参考 JSON 格式有误，无法解析：{error}",
     messages.CANNOT_WRITE: "无法写入文件：{error}",
+    messages.CHOOSE_VANILLA_REFERENCE:
+        "请先选择原版参考 JSON：chr\\c0000-chrbnd-dcx\\c0000.flver 的节点 JSON（Nodes.json）。",
+    messages.MATCHED: "已将骨架“{armature}”的 {total} 根骨骼中的 {count} 根转为原版轴向",
 }
 
 

@@ -17,6 +17,7 @@ PARENT_AFTER_CHILD = (
     "reference's bones. Choose 'Keep Reference Parent' or move the bone back.")
 UNKNOWN_REPARENT = "Unknown reparent choice '{choice}'. Expected one of {choices}."
 UNKNOWN_AXIS = "Unknown axis '{name}'. Expected one of {axes}."
+UNKNOWN_SPACE = "Unknown coordinate space '{name}'. Expected one of {spaces}."
 SAME_LINE_AXES = "Length axis '{length}' and roll axis '{roll}' must be different lines."
 PARENTS_FIRST = "Node {index} has parent {parent}; parents must come first."
 
@@ -33,6 +34,9 @@ WOULD_OVERWRITE = "The output would overwrite the reference JSON. Choose another
 CANNOT_READ = "Could not read the reference JSON: {error}"
 NOT_JSON = "The reference JSON is not valid JSON: {error}"
 CANNOT_WRITE = "Could not write the file: {error}"
+CHOOSE_VANILLA_REFERENCE = ("Choose the Vanilla Reference JSON first: the node JSON of "
+                            "chr\\c0000-chrbnd-dcx\\c0000.flver (Nodes.json).")
+MATCHED = "Turned {count} of {total} bones of '{armature}' to the vanilla axes"
 
 
 def templates() -> dict:

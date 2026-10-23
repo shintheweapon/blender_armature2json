@@ -3,7 +3,7 @@
 
 [project]
 name = "armature2json"
-version = "2.1.0"
+version = "2.2.0"
 description = "Blender extension that exports an armature as FLVER node JSON for FLVER_Editor"
 # Blender 4.5 runs Python 3.11
 requires-python = ">=3.11,<3.12"

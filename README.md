@@ -15,7 +15,7 @@ Version 2.0.0 is a rewrite of Armature2JSON 1.0.0: new maths, the From Armature 
    .\build.ps1
    ```
 
-   It runs Blender's own extension build, writes `dist\armature2json-2.1.0.zip` (the name follows `id` and `version` in `src\blender_manifest.toml`), and checks that the zip installs cleanly. If Blender lives elsewhere, pass its path: `.\build.ps1 -Blender "<path to blender.exe>"`. On a machine whose execution policy blocks scripts, run `powershell -ExecutionPolicy Bypass -File build.ps1` instead.
+   It runs Blender's own extension build, writes `dist\armature2json-2.2.0.zip` (the name follows `id` and `version` in `src\blender_manifest.toml`), and checks that the zip installs cleanly. If Blender lives elsewhere, pass its path: `.\build.ps1 -Blender "<path to blender.exe>"`. On a machine whose execution policy blocks scripts, run `powershell -ExecutionPolicy Bypass -File build.ps1` instead.
 2. In Blender: Edit > Preferences > Get Extensions, open the menu at the top right, choose "Install from Disk" and pick the zip.
 
 Without the script, zip the contents of the `src` folder by hand (not the folder itself, and without the `__pycache__` folders), so that `blender_manifest.toml` sits at the top of the zip.
@@ -42,14 +42,35 @@ Without the script, zip the contents of the `src` folder by hand (not the folder
 | Mode | From Armature, or Merge into Reference JSON | From Armature |
 | Reference JSON | Merge only: the node JSON used as the reference (usually a vanilla one) | empty |
 | Reparented Bones | Merge only: what to do with reference bones that have another parent in Blender (see [Merge into Reference JSON](#merge-into-reference-json)) | Keep Reference Parent |
+| Coordinate Space | How Blender coordinates become FS (FLVER) coordinates: Blender World (Convert to FS) or Armature Space = FS Space (see [How bones become nodes](#how-bones-become-nodes)) | Blender World (Convert to FS) |
 | Length Axis | The node axis that runs along each bone (in Merge, each added bone) | `X` |
 | Roll Axis | The node axis that each bone's Z axis becomes (in Merge, each added bone's) | `-Z` |
-| Mark Root as Mesh Node | From Armature only: write node 0 with Flags 12 (Mesh and Bone) instead of 8 (Bone) | on |
-| Vanilla Bone Orientations | From Armature only: give bones with Elden Ring bone names their vanilla orientation, keeping their positions (see [How bones become nodes](#how-bones-become-nodes)) | on |
+| Vanilla Reference JSON | The node JSON of the vanilla character skeleton, for Match Vanilla Orientations (see [Vanilla orientations on the armature](#vanilla-orientations-on-the-armature)) | empty |
+| Mark Root as Mesh Node | From Armature only: write node 0 with Flags 12 (Mesh and Bone) instead of 8 (Bone) | off |
 
-**Reset Axes**, under the two axis options, sets them back to `X` and `-Z`.
+**Reset Axes**, under the two axis options, sets them back to `X` and `-Z`. **As Imported**, next to it, sets them to `Y` and `Z`: each node keeps its bone's own axes.
 
-Each .blend file keeps its own options, except Mark Root as Mesh Node and Vanilla Bone Orientations: they are add-on preferences, so Blender remembers them between sessions (when it saves its preferences, which it does at quit by default). They also show in Edit > Preferences > Add-ons > Armature2JSON.
+Each .blend file keeps its own options, except Vanilla Reference JSON and Mark Root as Mesh Node: they are add-on preferences, so Blender remembers them between sessions (when it saves its preferences, which it does at quit by default). They also show in Edit > Preferences > Add-ons > Armature2JSON. Blender stores a preference only once it has been set: Mark Root as Mesh Node is off by default since 2.2.0, and a choice you made before stays.
+
+## Vanilla orientations on the armature
+
+The game's animations move the vanilla body bones (Pelvis, Spine, the arms and so on) in the axes of the vanilla character skeleton, c0000. A body bone with other axes twists in game, unless ERCS applies the animations relative to the rest pose. A custom physics skeleton (`Skeleton.hkx`, and the cloth `_c.hkx`) made with the Havok tools takes its bone axes from the Blender armature, so the axes have to be right on the armature itself, not only in the JSON.
+
+**Match Vanilla Orientations**, at the top of the sidebar panel, does this. It reads the Vanilla Reference JSON, the node JSON of `chr\c0000-chrbnd-dcx\c0000.flver` saved by FLVER Editor (Nodes.json); the add-on remembers its path. Every bone of the armature whose name is in that JSON:
+
+- gets the axes that export as the vanilla node's axes, with the Coordinate Space and axis options set at that moment;
+- keeps its own head and length, so the model keeps its proportions.
+
+Matched bones and their children are disconnected first, so no child moves. X-Axis Mirror is switched off while the bones are matched and restored afterwards. Bones of other names stay as they are, and a skinned mesh in rest pose keeps its shape. Matched bones may look sideways in Blender. Ctrl+Z undoes the match.
+
+For a model with a custom physics skeleton, the recipe confirmed in game without ERCS:
+
+1. Set Coordinate Space to Armature Space = FS Space and press As Imported.
+2. Press Match Vanilla Orientations, with the armature in its rest pose (poses and actions of matched bones are relative to the old axes, so they change).
+3. Export the JSON.
+4. Export the FBX for the Havok tools from the same armature and make `Skeleton.hkx` and the cloth `_c.hkx` again; recheck any cloth setting given in a bone's own axes.
+
+The recipe was confirmed with Tlarok's bones adder on the same armature, which writes the same nodes as Armature2JSON with these settings. Blender World (Convert to FS) with a custom physics skeleton has not been checked in game.
 
 ## Warning: indices that FLVER Editor does not update
 
@@ -59,7 +80,7 @@ In From Armature mode, nodes are written in depth-first order, which differs fro
 - the node index of any vanilla mesh that stays in the FLVER;
 - the SkeletonSet, a second copy of the bone hierarchy stored in the FLVER, which FLVER Editor writes back unchanged.
 
-Point the dummies and kept meshes at the right nodes again in FLVER Editor after loading the JSON. In Merge mode with a vanilla reference JSON, dummies that point at bones keep valid indices; kept meshes, whose nodes come after the added bones, still need re-pointing. Meshes imported from FBX afterwards point at node 0, which is why "Mark Root as Mesh Node" is on by default in From Armature mode. Rebuild the SkeletonSet with the tool described in [Fix the SkeletonSet after Load JSON](#fix-the-skeletonset-after-load-json).
+Point the dummies and kept meshes at the right nodes again in FLVER Editor after loading the JSON. In Merge mode with a vanilla reference JSON, dummies that point at bones keep valid indices; kept meshes, whose nodes come after the added bones, still need re-pointing. Meshes imported from FBX afterwards point at node 0; turn on "Mark Root as Mesh Node" (From Armature mode) to write node 0 as a mesh node for them. Rebuild the SkeletonSet with the tool described in [Fix the SkeletonSet after Load JSON](#fix-the-skeletonset-after-load-json).
 
 ## Merge into Reference JSON
 
@@ -87,7 +108,7 @@ A bone cannot be reparented under an added bone, because added bones come after 
 | Rotation | Single-precision `asin` | Double-precision `atan2`, exact near gimbal lock |
 | Bounding box | Zero | From the weighted vertices |
 
-On three sample characters, the 1.0.0 maths reproduces the vanilla joint positions for only part of the bones, while 2.0.0 matches them all.
+On three sample characters, the 1.0.0 maths reproduces the vanilla joint positions for only part of the bones, while 2.0.0 matches them all. Since 2.2.0, the Coordinate Space option Armature Space = FS Space reads the armature's space as 1.0.0 did.
 
 ## Fix the SkeletonSet after Load JSON
 
@@ -107,11 +128,14 @@ The tool only needs Python 3. It refuses files it cannot fix safely: big-endian 
 
 A node (one entry of the JSON list) is SoulsFormats' `FLVER.Node`. Each Blender bone becomes one node.
 
-**Position.** FLVER space is Blender space turned so that Y points up, then mirrored along Z: a point at Blender (x, y, z) lands at FLVER (x, z, y). The armature object's own transform is included.
+**Position.** FS space (FLVER space) is the game's: Y up, the character faces -Z, and its left is +X. The Coordinate Space option sets how Blender coordinates become FS coordinates:
+
+- **Blender World (Convert to FS)**, the default: the armature as it stands in Blender's world, Z up, including the armature object's transform and its parents. It is turned so that Y points up, then mirrored along Z: a point at Blender (x, y, z) lands at FS (x, z, y). This suits armatures that stand upright in Blender, such as those from the FLVER importer.
+- **Armature Space = FS Space**: the armature's own coordinates are taken to be FS coordinates already and are written unchanged; the armature object's transform is ignored. Tlarok's script and FLVER Bones Adder read armatures this way. An armature imported from an FBX of a FLVER lies on its back in Blender, because its coordinates already are FS coordinates.
 
 **Axes.** Blender always runs a bone along its own Y axis; vanilla FLVER bones run along their own X axis. The length and roll options set the conversion. For skeletons that came from FLVER Editor's FBX export, the defaults give the core bones (clavicles, upper arms, forearms, thighs, neck, fingers) their vanilla axes back, except where a Blender bone points at a different child than in the vanilla skeleton.
 
-**Vanilla orientations.** Without ERCS, the game appears to move equipment with the player's own bones, so a node whose orientation differs from the vanilla bone of the same name turns the mesh around that bone, and the model twists. With "Vanilla Bone Orientations" on, every bone whose name is in the built-in Elden Ring table (`src/core/vanilla_axes.py`, 280 bones) gets that vanilla orientation; its position and scale stay as in Blender, so the model keeps its proportions. Other bones keep their own position and orientation; only their values relative to a turned parent are recomputed. ERCS works with either setting.
+**Vanilla orientations.** The axes the options produce are written as they are. To give vanilla-named bones the vanilla skeleton's axes, use Match Vanilla Orientations on the armature before exporting (see [Vanilla orientations on the armature](#vanilla-orientations-on-the-armature)).
 
 **Rotation.** Euler angles in radians, applied X, then Z, then Y, as SoulsFormats' `FLVER.Node.ComputeLocalTransform` expects. The angles are computed in double precision so that rotations close to gimbal lock stay exact.
 
@@ -150,14 +174,6 @@ Run the tests that need no Blender (the pure logic in `tests/unit`, which import
 uv run pytest
 ```
 
-### Vanilla orientation table
-
-`src/core/vanilla_axes.py` is generated, not written by hand. `tools/make_vanilla_axes.py` reads the node list of vanilla FLVER files, leaves out Disabled nodes and their descendants, and writes each bone's world orientation in FLVER space. When several files have a bone, the first one wins, and the tool prints how far the others disagree. The current table comes from FC_F_0000, AM_F_0000, BD_M_1010, BD_M_1330, BD_M_1501, BD_M_1590, BD_M_2110, HD_M_1500 and HR_A_0006, unpacked from the game's `parts` folder:
-
-```
-uv run python tools/make_vanilla_axes.py src/core/vanilla_axes.py FC_F_0000.flver AM_F_0000.flver ...
-```
-
 ### Tests in Blender
 
 Run the full test suite inside Blender 4.5. It includes `tests/unit`, and it switches Blender's interface to English for the run (preferences are not saved), because the tests check English messages:
@@ -173,7 +189,5 @@ Compare the output with a vanilla node JSON saved next to a sample `.blend` unde
 ```
 
 The check passes when names and parents match, joint positions match within 1e-4, and every box, turned into the vanilla node's axes, matches within 1e-4. It also lists which core bones get their vanilla axes.
-
-It also exports with Vanilla Bone Orientations on (the comparison above uses it off) and checks that no joint moves by more than 1e-4 and that every turned node matches the table.
 
 It then checks Merge into Reference JSON: it drops the last 20 leaf nodes whose bones exist in Blender from the vanilla list and merges the armature back in. Every kept node must keep its vanilla values and parent, and every re-added node must come after the last node with Flags 8 or 10, with its joint position and box within 1e-4.
