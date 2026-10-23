@@ -2,7 +2,8 @@
 
 import bpy
 
-from ..operators import draw_options, find_armature
+from .. import prefs
+from ..operators import ARMATURE2JSON_OT_match_vanilla, draw_options, find_armature
 
 
 class ARMATURE2JSON_PT_main(bpy.types.Panel):
@@ -26,6 +27,13 @@ class ARMATURE2JSON_PT_main(bpy.types.Panel):
             text = bpy.app.translations.pgettext_iface("Armature: {name}")
             box.label(text=text.format(name=armature_obj.name), icon='ARMATURE_DATA',
                       translate=False)
+
+        # Vanilla orientations on the armature, done before exporting
+        options = prefs.get(context)
+        box = layout.box()
+        if options is not None:
+            box.prop(options, "vanilla_reference_path")
+        box.operator(ARMATURE2JSON_OT_match_vanilla.bl_idname)
 
         draw_options(layout, context)
 

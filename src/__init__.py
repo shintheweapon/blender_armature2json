@@ -6,12 +6,12 @@ if "bpy" in locals():
     import importlib
     from . import core, operators, prefs, ui
     from .core import (bounds, files, hierarchy, i18n_zh_hans, merge, messages,
-                       transforms, vanilla_axes, writer)
-    from .operators import export_operator
+                       orientations, transforms, vanilla_axes, writer)
+    from .operators import export_operator, match_operator
     from .ui import panel
     for _module in (messages, files, hierarchy, transforms, bounds, merge, vanilla_axes,
-                    writer, i18n_zh_hans, core, prefs, export_operator, operators,
-                    panel, ui):
+                    writer, orientations, i18n_zh_hans, core, prefs, export_operator,
+                    match_operator, operators, panel, ui):
         importlib.reload(_module)
     del _module
 

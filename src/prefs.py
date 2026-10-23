@@ -5,7 +5,7 @@
 from typing import Optional
 
 import bpy
-from bpy.props import BoolProperty
+from bpy.props import BoolProperty, StringProperty
 
 # Used when the add-on has no preferences entry (for example in tests)
 DEFAULT_MARK_ROOT_AS_MESH = True
@@ -29,8 +29,17 @@ class ARMATURE2JSON_preferences(bpy.types.AddonPreferences):
                     "whose orientation differs from vanilla",
         default=DEFAULT_VANILLA_ORIENTATIONS,
     )
+    vanilla_reference_path: StringProperty(
+        name="Vanilla Reference JSON",
+        description="Node JSON of the vanilla character skeleton, whose axes the game's "
+                    "animations use: export it from chr\\c0000-chrbnd-dcx\\c0000.flver with "
+                    "FLVER Editor (Nodes.json). Remembered between sessions",
+        subtype='FILE_PATH',
+        default="",
+    )
 
     def draw(self, context):
+        self.layout.prop(self, "vanilla_reference_path")
         self.layout.prop(self, "mark_root_as_mesh")
         self.layout.prop(self, "vanilla_orientations")
 
@@ -89,3 +98,22 @@ def vanilla_orientations(context: bpy.types.Context) -> bool:
     """
     options = get(context)
     return options.vanilla_orientations if options is not None else DEFAULT_VANILLA_ORIENTATIONS
+
+
+def vanilla_reference_path(context: bpy.types.Context) -> str:
+    """
+    Read the remembered Vanilla Reference JSON path.
+
+    Parameters
+    ----------
+    context : bpy.types.Context
+        Current Blender context.
+
+    Returns
+    -------
+    str
+        The saved path, or an empty string when none is set or the add-on
+        has no preferences entry.
+    """
+    options = get(context)
+    return options.vanilla_reference_path if options is not None else ""

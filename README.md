@@ -45,12 +45,33 @@ Without the script, zip the contents of the `src` folder by hand (not the folder
 | Coordinate Space | How Blender coordinates become FS (FLVER) coordinates: Blender World (Convert to FS) or Armature Space = FS Space (see [How bones become nodes](#how-bones-become-nodes)) | Blender World (Convert to FS) |
 | Length Axis | The node axis that runs along each bone (in Merge, each added bone) | `X` |
 | Roll Axis | The node axis that each bone's Z axis becomes (in Merge, each added bone's) | `-Z` |
+| Vanilla Reference JSON | The node JSON of the vanilla character skeleton, for Match Vanilla Orientations (see [Vanilla orientations on the armature](#vanilla-orientations-on-the-armature)) | empty |
 | Mark Root as Mesh Node | From Armature only: write node 0 with Flags 12 (Mesh and Bone) instead of 8 (Bone) | on |
 | Vanilla Bone Orientations | From Armature only: give bones with Elden Ring bone names their vanilla orientation, keeping their positions (see [How bones become nodes](#how-bones-become-nodes)) | on |
 
-**Reset Axes**, under the two axis options, sets them back to `X` and `-Z`.
+**Reset Axes**, under the two axis options, sets them back to `X` and `-Z`. **As Imported**, next to it, sets them to `Y` and `Z`: each node keeps its bone's own axes.
 
-Each .blend file keeps its own options, except Mark Root as Mesh Node and Vanilla Bone Orientations: they are add-on preferences, so Blender remembers them between sessions (when it saves its preferences, which it does at quit by default). They also show in Edit > Preferences > Add-ons > Armature2JSON.
+Each .blend file keeps its own options, except Vanilla Reference JSON, Mark Root as Mesh Node and Vanilla Bone Orientations: they are add-on preferences, so Blender remembers them between sessions (when it saves its preferences, which it does at quit by default). They also show in Edit > Preferences > Add-ons > Armature2JSON.
+
+## Vanilla orientations on the armature
+
+The game's animations move the vanilla body bones (Pelvis, Spine, the arms and so on) in the axes of the vanilla character skeleton, c0000. A body bone with other axes twists in game, unless ERCS applies the animations relative to the rest pose. A custom physics skeleton (`Skeleton.hkx`, and the cloth `_c.hkx`) made with the Havok tools takes its bone axes from the Blender armature, so the axes have to be right on the armature itself, not only in the JSON.
+
+**Match Vanilla Orientations**, at the top of the sidebar panel, does this. It reads the Vanilla Reference JSON, the node JSON of `chr\c0000-chrbnd-dcx\c0000.flver` saved by FLVER Editor (Nodes.json); the add-on remembers its path. Every bone of the armature whose name is in that JSON:
+
+- gets the axes that export as the vanilla node's axes, with the Coordinate Space and axis options set at that moment;
+- keeps its own head and length, so the model keeps its proportions.
+
+Matched bones and their children are disconnected first, so no child moves. X-Axis Mirror is switched off while the bones are matched and restored afterwards. Bones of other names stay as they are, and a skinned mesh in rest pose keeps its shape. Matched bones may look sideways in Blender. Ctrl+Z undoes the match.
+
+For a model with a custom physics skeleton, the recipe confirmed in game without ERCS:
+
+1. Set Coordinate Space to Armature Space = FS Space and press As Imported.
+2. Press Match Vanilla Orientations, with the armature in its rest pose (poses and actions of matched bones are relative to the old axes, so they change).
+3. Export the JSON.
+4. Export the FBX for the Havok tools from the same armature and make `Skeleton.hkx` and the cloth `_c.hkx` again; recheck any cloth setting given in a bone's own axes.
+
+The recipe was confirmed with Tlarok's bones adder on the same armature, which writes the same nodes as Armature2JSON with these settings. Blender World (Convert to FS) with a custom physics skeleton has not been checked in game.
 
 ## Warning: indices that FLVER Editor does not update
 
