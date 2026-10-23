@@ -89,13 +89,6 @@ _INTERFACE = {
     "Remembered between sessions":
         "原版角色骨架的节点 JSON，游戏动画使用它的轴向：用 FLVER Editor 从 "
         "chr\\c0000-chrbnd-dcx\\c0000.flver 导出（Nodes.json）。会在会话之间记住",
-    # Vanilla orientations
-    "Vanilla Bone Orientations": "原版骨骼朝向",
-    "Give bones with Elden Ring bone names their vanilla orientation, keeping "
-    "their positions. Without ERCS, the game turns the mesh around any bone "
-    "whose orientation differs from vanilla":
-        "名称与艾尔登法环骨骼相同的骨骼使用原版朝向，位置保持不变。"
-        "不使用 ERCS 时，游戏会让网格绕朝向与原版不同的骨骼扭转",
 }
 _INTERFACE.update({f"Node {axis} axis": f"节点 {axis} 轴" for axis in _AXES})
 

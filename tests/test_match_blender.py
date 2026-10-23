@@ -46,8 +46,7 @@ REFERENCE = {
 
 
 def export_rotations(arm, space, axes):
-    nodes = writer.build_nodes(arm, length_axis=axes[0], roll_axis=axes[1], space=space,
-                               vanilla_orientations=False)
+    nodes = writer.build_nodes(arm, length_axis=axes[0], roll_axis=axes[1], space=space)
     worlds = transforms.world_matrices(nodes)
     return {n['Name']: w.to_3x3().normalized() for n, w in zip(nodes, worlds)}
 
@@ -152,7 +151,7 @@ class MatchTests(unittest.TestCase):
 
     def test_load_reference_reads_the_written_rotations(self):
         arm = sample_armature()
-        nodes = writer.build_nodes(arm, vanilla_orientations=False)
+        nodes = writer.build_nodes(arm)
         folder = tempfile.TemporaryDirectory()
         self.addCleanup(folder.cleanup)
         path = os.path.join(folder.name, 'Nodes.json')

@@ -11,13 +11,13 @@ import tempfile
 from typing import Dict, List, Optional
 
 import bpy
-from mathutils import Matrix, Quaternion
+from mathutils import Matrix
 
 REPO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO_DIR not in sys.path:
     sys.path.insert(0, REPO_DIR)
 
-from src.core import vanilla_axes, writer  # noqa: E402
+from src.core import writer  # noqa: E402
 from src.core.transforms import world_matrices  # noqa: E402
 from src.operators import find_armature  # noqa: E402
 
@@ -158,45 +158,6 @@ def merge_check(armature_obj: bpy.types.Object, vanilla: List[dict], name: str) 
     return [f'merge: {failure}' for failure in failures]
 
 
-def vanilla_orientation_check(armature_obj: bpy.types.Object, plain: List[dict],
-                              name: str) -> List[str]:
-    """
-    Check the Vanilla Bone Orientations option against the plain export.
-
-    Parameters
-    ----------
-    armature_obj : bpy.types.Object
-        The sample's armature.
-    plain : list of dict
-        The export with the option off.
-    name : str
-        Sample name for the report.
-
-    Returns
-    -------
-    list of str
-        Failures: joint positions that moved by more than ``TOLERANCE``, or
-        vanilla-named nodes whose orientation is not the table's.
-    """
-    turned = writer.build_nodes(armature_obj, vanilla_orientations=True)
-    plain_worlds = world_matrices(plain)
-    turned_worlds = world_matrices(turned)
-    moved = max((a.translation - b.translation).length
-                for a, b in zip(plain_worlds, turned_worlds))
-    named = [i for i, n in enumerate(turned) if n['Name'] in vanilla_axes.ORIENTATIONS]
-    angles = [math.degrees(turned_worlds[i].to_quaternion().rotation_difference(
-        Quaternion(vanilla_axes.ORIENTATIONS[turned[i]['Name']])).angle) for i in named]
-    turn = max((min(a, 360.0 - a) for a in angles), default=0.0)
-    print(f'CHECK {name}: vanilla orientations: {len(named)} nodes turned, joint positions moved '
-          f'up to {moved:.2e}, largest angle from the table {turn:.2e} degrees')
-    failures = []
-    if moved > TOLERANCE:
-        failures.append(f'vanilla orientations moved joints by up to {moved:.2e}')
-    if turn > 1e-3:
-        failures.append(f'vanilla orientations off the table by up to {turn:.2e} degrees')
-    return failures
-
-
 def main() -> int:
     """
     Run the comparison and print a report.
@@ -214,9 +175,7 @@ def main() -> int:
     armature_obj = find_armature(bpy.context)
     with tempfile.TemporaryDirectory() as folder:
         out_path = os.path.join(folder, 'out.json')
-        # The samples' own nodes are the reference here, so the vanilla
-        # orientations are left off; they are checked separately below
-        writer.write_nodes(out_path, writer.build_nodes(armature_obj, vanilla_orientations=False))
+        writer.write_nodes(out_path, writer.build_nodes(armature_obj))
         with open(out_path, encoding='utf-8') as handle:
             output = json.load(handle)
 
@@ -289,7 +248,6 @@ def main() -> int:
           f'{len(core_matching)}/{len(core)}, differing {core_differing}')
     print(f'CHECK {name}: boxes compared {boxes_compared}, largest side difference '
           f'{largest_box_error:.2e}; nodes without weighted vertices (zero box) {zero_in_output}')
-    failures += vanilla_orientation_check(armature_obj, output, name)
     failures += merge_check(armature_obj, vanilla, name)
     for failure in failures:
         print(f'CHECK {name}: FAIL {failure}')

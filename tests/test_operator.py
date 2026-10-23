@@ -208,44 +208,6 @@ class MarkRootPreferenceTests(unittest.TestCase):
     def test_scene_no_longer_has_the_option(self):
         self.assertNotIn('armature2json_mark_root_as_mesh', bpy.types.Scene.bl_rna.properties.keys())
 
-def export_spine_rotation(test: unittest.TestCase):
-    """Export a one-bone armature named Spine with the operator; return its Rotation."""
-    arm = helpers.make_armature([('Spine', None, (0, 0, 1), (0.2, 0, 1), 0.0)])
-    bpy.context.view_layer.objects.active = arm
-    with tempfile.TemporaryDirectory() as folder:
-        path = os.path.join(folder, 'out.json')
-        test.assertEqual(bpy.ops.armature2json.export(filepath=path), {'FINISHED'})
-        with open(path, encoding='utf-8') as handle:
-            return json.load(handle)[0]['Rotation']
-
-
-class VanillaOrientationPreferenceTests(unittest.TestCase):
-    """Vanilla Bone Orientations is an add-on preference that reaches the export."""
-
-    def setUp(self):
-        helpers.new_scene()
-        src.register()
-        self.addCleanup(src.unregister)
-        arm = helpers.make_armature([('Spine', None, (0, 0, 1), (0.2, 0, 1), 0.0)], name='Plain')
-        self.plain = writer.build_nodes(arm, vanilla_orientations=False)[0]['Rotation']
-        self.turned = writer.build_nodes(arm, vanilla_orientations=True)[0]['Rotation']
-        bpy.data.objects.remove(arm)
-        self.assertNotEqual(self.plain, self.turned)
-
-    def test_preference_on_turns_the_bone(self):
-        add_preferences_entry(self).vanilla_orientations = True
-        self.assertEqual(export_spine_rotation(self), self.turned)
-
-    def test_preference_off_keeps_the_blender_orientation(self):
-        add_preferences_entry(self).vanilla_orientations = False
-        self.assertEqual(export_spine_rotation(self), self.plain)
-
-    def test_without_preferences_the_default_is_on(self):
-        from src import prefs
-        self.assertIsNone(prefs.get(bpy.context))
-        self.assertTrue(prefs.vanilla_orientations(bpy.context))
-        self.assertEqual(export_spine_rotation(self), self.turned)
-
 
 if __name__ == '__main__':
     unittest.main()

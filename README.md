@@ -47,11 +47,10 @@ Without the script, zip the contents of the `src` folder by hand (not the folder
 | Roll Axis | The node axis that each bone's Z axis becomes (in Merge, each added bone's) | `-Z` |
 | Vanilla Reference JSON | The node JSON of the vanilla character skeleton, for Match Vanilla Orientations (see [Vanilla orientations on the armature](#vanilla-orientations-on-the-armature)) | empty |
 | Mark Root as Mesh Node | From Armature only: write node 0 with Flags 12 (Mesh and Bone) instead of 8 (Bone) | off |
-| Vanilla Bone Orientations | From Armature only: give bones with Elden Ring bone names their vanilla orientation, keeping their positions (see [How bones become nodes](#how-bones-become-nodes)) | on |
 
 **Reset Axes**, under the two axis options, sets them back to `X` and `-Z`. **As Imported**, next to it, sets them to `Y` and `Z`: each node keeps its bone's own axes.
 
-Each .blend file keeps its own options, except Vanilla Reference JSON, Mark Root as Mesh Node and Vanilla Bone Orientations: they are add-on preferences, so Blender remembers them between sessions (when it saves its preferences, which it does at quit by default). They also show in Edit > Preferences > Add-ons > Armature2JSON. Blender stores a preference only once it has been set: Mark Root as Mesh Node is off by default since 2.1.0, and a choice you made before stays.
+Each .blend file keeps its own options, except Vanilla Reference JSON and Mark Root as Mesh Node: they are add-on preferences, so Blender remembers them between sessions (when it saves its preferences, which it does at quit by default). They also show in Edit > Preferences > Add-ons > Armature2JSON. Blender stores a preference only once it has been set: Mark Root as Mesh Node is off by default since 2.1.0, and a choice you made before stays.
 
 ## Vanilla orientations on the armature
 
@@ -136,7 +135,7 @@ A node (one entry of the JSON list) is SoulsFormats' `FLVER.Node`. Each Blender 
 
 **Axes.** Blender always runs a bone along its own Y axis; vanilla FLVER bones run along their own X axis. The length and roll options set the conversion. For skeletons that came from FLVER Editor's FBX export, the defaults give the core bones (clavicles, upper arms, forearms, thighs, neck, fingers) their vanilla axes back, except where a Blender bone points at a different child than in the vanilla skeleton.
 
-**Vanilla orientations.** Without ERCS, the game appears to move equipment with the player's own bones, so a node whose orientation differs from the vanilla bone of the same name turns the mesh around that bone, and the model twists. With "Vanilla Bone Orientations" on, every bone whose name is in the built-in Elden Ring table (`src/core/vanilla_axes.py`, 280 bones) gets that vanilla orientation; its position and scale stay as in Blender, so the model keeps its proportions. Other bones keep their own position and orientation; only their values relative to a turned parent are recomputed. ERCS works with either setting.
+**Vanilla orientations.** The axes the options produce are written as they are. To give vanilla-named bones the vanilla skeleton's axes, use Match Vanilla Orientations on the armature before exporting (see [Vanilla orientations on the armature](#vanilla-orientations-on-the-armature)).
 
 **Rotation.** Euler angles in radians, applied X, then Z, then Y, as SoulsFormats' `FLVER.Node.ComputeLocalTransform` expects. The angles are computed in double precision so that rotations close to gimbal lock stay exact.
 
@@ -175,14 +174,6 @@ Run the tests that need no Blender (the pure logic in `tests/unit`, which import
 uv run pytest
 ```
 
-### Vanilla orientation table
-
-`src/core/vanilla_axes.py` is generated, not written by hand. `tools/make_vanilla_axes.py` reads the node list of vanilla FLVER files, leaves out Disabled nodes and their descendants, and writes each bone's world orientation in FLVER space. When several files have a bone, the first one wins, and the tool prints how far the others disagree. The current table comes from FC_F_0000, AM_F_0000, BD_M_1010, BD_M_1330, BD_M_1501, BD_M_1590, BD_M_2110, HD_M_1500 and HR_A_0006, unpacked from the game's `parts` folder:
-
-```
-uv run python tools/make_vanilla_axes.py src/core/vanilla_axes.py FC_F_0000.flver AM_F_0000.flver ...
-```
-
 ### Tests in Blender
 
 Run the full test suite inside Blender 4.5. It includes `tests/unit`, and it switches Blender's interface to English for the run (preferences are not saved), because the tests check English messages:
@@ -198,7 +189,5 @@ Compare the output with a vanilla node JSON saved next to a sample `.blend` unde
 ```
 
 The check passes when names and parents match, joint positions match within 1e-4, and every box, turned into the vanilla node's axes, matches within 1e-4. It also lists which core bones get their vanilla axes.
-
-It also exports with Vanilla Bone Orientations on (the comparison above uses it off) and checks that no joint moves by more than 1e-4 and that every turned node matches the table.
 
 It then checks Merge into Reference JSON: it drops the last 20 leaf nodes whose bones exist in Blender from the vanilla list and merges the armature back in. Every kept node must keep its vanilla values and parent, and every re-added node must come after the last node with Flags 8 or 10, with its joint position and box within 1e-4.
