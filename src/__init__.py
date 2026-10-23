@@ -1,5 +1,20 @@
 # Armature2JSON: writes FLVER node JSON from a Blender armature
 
+# Blender reloads only this package when the add-on is reinstalled or
+# re-enabled; reload its modules too (dependencies first), so their new code runs
+if "bpy" in locals():
+    import importlib
+    from . import core, operators, prefs, ui
+    from .core import (bounds, files, hierarchy, i18n_zh_hans, merge, messages,
+                       transforms, vanilla_axes, writer)
+    from .operators import export_operator
+    from .ui import panel
+    for _module in (messages, files, hierarchy, transforms, bounds, merge, vanilla_axes,
+                    writer, i18n_zh_hans, core, prefs, export_operator, operators,
+                    panel, ui):
+        importlib.reload(_module)
+    del _module
+
 import bpy
 from bpy.props import EnumProperty, StringProperty
 

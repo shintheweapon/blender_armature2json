@@ -13,6 +13,10 @@
 - **Reset Axes** button under Length Axis and Roll Axis (sidebar panel and export dialog): sets them back to `X`
   and `-Z`, the defaults, which match vanilla body bones. Ctrl+Z undoes it.
 
+### Fixed
+- Reinstalling or re-enabling the add-on in a running Blender now reloads all its modules. Before, Blender
+  kept their old code in memory until it was restarted.
+
 ### Changed
 - Version 2.1.0 (`src/blender_manifest.toml`, `pyproject.toml`, `uv.lock`).
 
