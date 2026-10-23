@@ -90,7 +90,7 @@ def with_vanilla_orientations(names: List[str], matrices: List[Matrix]) -> List[
 def build_nodes(armature_obj: bpy.types.Object,
                 length_axis: str = transforms.DEFAULT_LENGTH_AXIS,
                 roll_axis: str = transforms.DEFAULT_ROLL_AXIS,
-                mark_root_as_mesh: bool = True,
+                mark_root_as_mesh: bool = False,
                 vanilla_orientations: bool = True,
                 space: str = transforms.DEFAULT_SPACE) -> List[dict]:
     """

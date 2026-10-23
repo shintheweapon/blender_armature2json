@@ -1,4 +1,5 @@
-# The Mark Root as Mesh Node and Vanilla Bone Orientations choices, kept as
+# The Vanilla Reference JSON path and the Mark Root as Mesh Node and Vanilla
+# Bone Orientations choices, kept as
 # add-on preferences so Blender remembers them between sessions (when it saves
 # its preferences)
 
@@ -8,7 +9,7 @@ import bpy
 from bpy.props import BoolProperty, StringProperty
 
 # Used when the add-on has no preferences entry (for example in tests)
-DEFAULT_MARK_ROOT_AS_MESH = True
+DEFAULT_MARK_ROOT_AS_MESH = False
 DEFAULT_VANILLA_ORIENTATIONS = True
 
 
@@ -18,8 +19,9 @@ class ARMATURE2JSON_preferences(bpy.types.AddonPreferences):
 
     mark_root_as_mesh: BoolProperty(
         name="Mark Root as Mesh Node",
-        description="Write node 0 with Flags 12 (Mesh and Bone) instead of 8 (Bone). "
-                    "FLVER_Editor points every mesh it imports from FBX at node 0",
+        description="Off by default. When on, node 0 is written with Flags 12 (Mesh and Bone) "
+                    "instead of 8 (Bone). FLVER_Editor points every mesh it imports from FBX at "
+                    "node 0",
         default=DEFAULT_MARK_ROOT_AS_MESH,
     )
     vanilla_orientations: BoolProperty(
@@ -74,7 +76,7 @@ def mark_root_as_mesh(context: bpy.types.Context) -> bool:
     Returns
     -------
     bool
-        The saved choice, or the default (on) when the add-on has no
+        The saved choice, or the default (off) when the add-on has no
         preferences entry.
     """
     options = get(context)

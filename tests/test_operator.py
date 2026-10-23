@@ -199,11 +199,11 @@ class MarkRootPreferenceTests(unittest.TestCase):
         add_preferences_entry(self).mark_root_as_mesh = True
         self.assertEqual(export_flags(self), [12, 8])
 
-    def test_without_preferences_the_default_is_on(self):
+    def test_without_preferences_the_default_is_off(self):
         from src import prefs
         self.assertIsNone(prefs.get(bpy.context))
-        self.assertTrue(prefs.mark_root_as_mesh(bpy.context))
-        self.assertEqual(export_flags(self), [12, 8])
+        self.assertFalse(prefs.mark_root_as_mesh(bpy.context))
+        self.assertEqual(export_flags(self), [8, 8])
 
     def test_scene_no_longer_has_the_option(self):
         self.assertNotIn('armature2json_mark_root_as_mesh', bpy.types.Scene.bl_rna.properties.keys())

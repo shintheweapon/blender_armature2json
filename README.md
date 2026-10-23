@@ -46,12 +46,12 @@ Without the script, zip the contents of the `src` folder by hand (not the folder
 | Length Axis | The node axis that runs along each bone (in Merge, each added bone) | `X` |
 | Roll Axis | The node axis that each bone's Z axis becomes (in Merge, each added bone's) | `-Z` |
 | Vanilla Reference JSON | The node JSON of the vanilla character skeleton, for Match Vanilla Orientations (see [Vanilla orientations on the armature](#vanilla-orientations-on-the-armature)) | empty |
-| Mark Root as Mesh Node | From Armature only: write node 0 with Flags 12 (Mesh and Bone) instead of 8 (Bone) | on |
+| Mark Root as Mesh Node | From Armature only: write node 0 with Flags 12 (Mesh and Bone) instead of 8 (Bone) | off |
 | Vanilla Bone Orientations | From Armature only: give bones with Elden Ring bone names their vanilla orientation, keeping their positions (see [How bones become nodes](#how-bones-become-nodes)) | on |
 
 **Reset Axes**, under the two axis options, sets them back to `X` and `-Z`. **As Imported**, next to it, sets them to `Y` and `Z`: each node keeps its bone's own axes.
 
-Each .blend file keeps its own options, except Vanilla Reference JSON, Mark Root as Mesh Node and Vanilla Bone Orientations: they are add-on preferences, so Blender remembers them between sessions (when it saves its preferences, which it does at quit by default). They also show in Edit > Preferences > Add-ons > Armature2JSON.
+Each .blend file keeps its own options, except Vanilla Reference JSON, Mark Root as Mesh Node and Vanilla Bone Orientations: they are add-on preferences, so Blender remembers them between sessions (when it saves its preferences, which it does at quit by default). They also show in Edit > Preferences > Add-ons > Armature2JSON. Blender stores a preference only once it has been set: Mark Root as Mesh Node is off by default since 2.1.0, and a choice you made before stays.
 
 ## Vanilla orientations on the armature
 
@@ -81,7 +81,7 @@ In From Armature mode, nodes are written in depth-first order, which differs fro
 - the node index of any vanilla mesh that stays in the FLVER;
 - the SkeletonSet, a second copy of the bone hierarchy stored in the FLVER, which FLVER Editor writes back unchanged.
 
-Point the dummies and kept meshes at the right nodes again in FLVER Editor after loading the JSON. In Merge mode with a vanilla reference JSON, dummies that point at bones keep valid indices; kept meshes, whose nodes come after the added bones, still need re-pointing. Meshes imported from FBX afterwards point at node 0, which is why "Mark Root as Mesh Node" is on by default in From Armature mode. Rebuild the SkeletonSet with the tool described in [Fix the SkeletonSet after Load JSON](#fix-the-skeletonset-after-load-json).
+Point the dummies and kept meshes at the right nodes again in FLVER Editor after loading the JSON. In Merge mode with a vanilla reference JSON, dummies that point at bones keep valid indices; kept meshes, whose nodes come after the added bones, still need re-pointing. Meshes imported from FBX afterwards point at node 0; turn on "Mark Root as Mesh Node" (From Armature mode) to write node 0 as a mesh node for them. Rebuild the SkeletonSet with the tool described in [Fix the SkeletonSet after Load JSON](#fix-the-skeletonset-after-load-json).
 
 ## Merge into Reference JSON
 

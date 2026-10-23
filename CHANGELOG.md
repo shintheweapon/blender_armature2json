@@ -29,6 +29,8 @@
   kept their old code in memory until it was restarted.
 
 ### Changed
+- **Mark Root as Mesh Node** is off by default. Blender keeps a choice you made before, since it stores a preference
+  only once it has been set.
 - Version 2.1.0 (`src/blender_manifest.toml`, `pyproject.toml`, `uv.lock`).
 
 ## 2.0.0

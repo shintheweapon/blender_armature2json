@@ -78,9 +78,9 @@ _INTERFACE = {
         "骨骼 Z 轴对应的节点轴。选 -Z 时，原版核心骨骼的轴向与原版一致",
     # Root flag
     "Mark Root as Mesh Node": "根节点同时标记为网格",
-    "Write node 0 with Flags 12 (Mesh and Bone) instead of 8 (Bone). "
-    "FLVER_Editor points every mesh it imports from FBX at node 0":
-        "节点 0 的 Flags 写为 12（网格 + 骨骼），而不是 8（骨骼）。"
+    "Off by default. When on, node 0 is written with Flags 12 (Mesh and Bone) instead of 8 "
+    "(Bone). FLVER_Editor points every mesh it imports from FBX at node 0":
+        "默认关闭。开启时，节点 0 的 Flags 写为 12（网格 + 骨骼），而不是 8（骨骼）。"
         "FLVER_Editor 从 FBX 导入的网格都会关联到节点 0",
     # Vanilla orientations on the armature
     "Vanilla Reference JSON": "原版参考 JSON",

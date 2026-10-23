@@ -120,8 +120,12 @@ class FlagsTests(unittest.TestCase):
     def setUp(self):
         helpers.new_scene()
 
-    def test_root_marked_as_mesh_by_default(self):
+    def test_root_plain_bone_by_default(self):
         nodes = writer.build_nodes(two_bone_armature())
+        self.assertEqual([n['Flags'] for n in nodes], [8, 8])
+
+    def test_root_marked_as_mesh_when_option_on(self):
+        nodes = writer.build_nodes(two_bone_armature(), mark_root_as_mesh=True)
         self.assertEqual([n['Flags'] for n in nodes], [12, 8])
 
     def test_root_plain_bone_when_option_off(self):
