@@ -70,7 +70,7 @@ For a model with a custom physics skeleton, the recipe confirmed in game without
 3. Export the JSON.
 4. Export the FBX for the Havok tools from the same armature and make `Skeleton.hkx` and the cloth `_c.hkx` again; recheck any cloth setting given in a bone's own axes.
 
-The recipe was confirmed with Tlarok's bones adder on the same armature, which writes the same nodes as Armature2JSON with these settings. Blender World (Convert to FS) with a custom physics skeleton has not been checked in game.
+The recipe has been confirmed in game with Armature2JSON's own export. Blender World (Convert to FS) with a custom physics skeleton has not been checked in game.
 
 ## Warning: indices that FLVER Editor does not update
 
@@ -94,7 +94,7 @@ Point the dummies and kept meshes at the right nodes again in FLVER Editor after
 |---|---|---|---|
 | Keep Reference Parent | `L_Forearm` | as in the reference | stays in place |
 | Use Blender Parent, Keep Placement | `L_UpperArm` | recomputed relative to `L_UpperArm` | stays in place, same axes |
-| Use Blender Parent, Keep Values (1.0.0) | `L_UpperArm` | as in the reference, now read relative to `L_UpperArm` | moves |
+| Use Blender Parent, Keep Values | `L_UpperArm` | as in the reference, now read relative to `L_UpperArm` | moves |
 
 A bone cannot be reparented under an added bone, because added bones come after the reference's bones and a parent must come first; the export stops and names the bone. Keep Reference Parent always works.
 
@@ -131,7 +131,7 @@ A node (one entry of the JSON list) is SoulsFormats' `FLVER.Node`. Each Blender 
 **Position.** FS space (FLVER space) is the game's: Y up, the character faces -Z, and its left is +X. The Coordinate Space option sets how Blender coordinates become FS coordinates:
 
 - **Blender World (Convert to FS)**, the default: the armature as it stands in Blender's world, Z up, including the armature object's transform and its parents. It is turned so that Y points up, then mirrored along Z: a point at Blender (x, y, z) lands at FS (x, z, y). This suits armatures that stand upright in Blender, such as those from the FLVER importer.
-- **Armature Space = FS Space**: the armature's own coordinates are taken to be FS coordinates already and are written unchanged; the armature object's transform is ignored. Tlarok's script and FLVER Bones Adder read armatures this way. An armature imported from an FBX of a FLVER lies on its back in Blender, because its coordinates already are FS coordinates.
+- **Armature Space = FS Space**: the armature's own coordinates are taken to be FS coordinates already and are written unchanged; the armature object's transform is ignored. An armature imported from an FBX of a FLVER lies on its back in Blender, because its coordinates already are FS coordinates.
 
 **Axes.** Blender always runs a bone along its own Y axis; vanilla FLVER bones run along their own X axis. The length and roll options set the conversion. For skeletons that came from FLVER Editor's FBX export, the defaults give the core bones (clavicles, upper arms, forearms, thighs, neck, fingers) their vanilla axes back, except where a Blender bone points at a different child than in the vanilla skeleton.
 
