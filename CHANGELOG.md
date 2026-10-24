@@ -1,5 +1,39 @@
 # Changelog
 
+## 2.2.0
+
+2.1.0 was never published; its changes are part of 2.2.0.
+
+### Added
+- **Coordinate Space** option (sidebar panel and export dialog, kept per .blend file): **Blender World (Convert to FS)**,
+  the default and the behaviour so far, or **Armature Space = FS Space**, which writes the armature's own coordinates
+  unchanged, as Armature2JSON 1.0.0 read them. An FBX import that lies on its back in Blender exported lying down
+  with Blender World. Applies to both modes and to the bounding boxes.
+- **Match Vanilla Orientations** (top of the sidebar panel): turns the armature's bones that have vanilla names to the
+  axes of the vanilla character skeleton, read from the **Vanilla Reference JSON** (c0000's Nodes.json, an add-on
+  preference so its path is remembered), keeping each bone's head and length. It uses the Coordinate Space and axis
+  options, so the export then writes the vanilla axes, and a custom Havok skeleton made from the same armature gets
+  them too. X-Axis Mirror is switched off while matching. Ctrl+Z undoes it.
+- **As Imported** button next to Reset Axes: sets Length Axis `Y` and Roll Axis `Z`, so each node keeps its bone's
+  own axes, as a custom Havok skeleton does.
+- **Reset Axes** button under Length Axis and Roll Axis (sidebar panel and export dialog): sets them back to `X`
+  and `-Z`, the defaults, which match vanilla body bones. Ctrl+Z undoes it.
+
+### Fixed
+- Reinstalling or re-enabling the add-on in a running Blender now reloads all its modules. Before, Blender
+  kept their old code in memory until it was restarted.
+
+### Changed
+- **Mark Root as Mesh Node** is off by default. Blender keeps a choice you made before, since it stores a preference
+  only once it has been set.
+- The Merge choice **Use Blender Parent, Keep Values (1.0.0)** is now called **Use Blender Parent, Keep Values**; it
+  works as before.
+- README shortened to installing and using the add-on; the details moved to `docs/DETAILS.md`.
+- `build.ps1` has no built-in Blender path: pass `-Blender`, or put the path on the first line of `build.local.txt`
+  (git-ignored).
+- `tests/check_samples.py` takes the reference JSON's path after `--`; without it, it still reads `<blend>.json`.
+- Version 2.2.0 (`src/blender_manifest.toml`, `pyproject.toml`, `uv.lock`).
+
 ## 2.0.0
 
 The first release of the rewrite, from the Armature2JSON repository. It replaces Armature2JSON 1.0.0 (tag

@@ -75,7 +75,9 @@ class MergeNodesTests(unittest.TestCase):
         nodes, _ = writer.merge_nodes(self.arm, partial)
         index = {n['Name']: i for i, n in enumerate(nodes)}
         out_world = transforms.world_matrices(nodes)[index['Cloth']]
-        bone_world = transforms.node_matrix(self.arm.matrix_world,
+        bone_world = transforms.node_matrix(transforms.space_mapping('BLENDER_WORLD',
+                                                                     self.arm.matrix_world),
+                                            self.arm.matrix_world,
                                             self.arm.data.bones['Cloth'].matrix_local,
                                             transforms.axis_matrix())
         self.assertSamePosition(out_world.translation, bone_world.translation)
@@ -84,7 +86,7 @@ class MergeNodesTests(unittest.TestCase):
                          by_name(self.full)['Cloth']['BoundingBoxMax'])
 
     def _reparented_input(self):
-        # README example: the input has Hand under Forearm; in Blender, Hand
+        # docs/DETAILS.md example: the input has Hand under Forearm; in Blender, Hand
         # is moved under UpperArm
         partial = copy.deepcopy(self.full)
         bpy.context.view_layer.objects.active = self.arm

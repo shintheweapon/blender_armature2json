@@ -1,5 +1,20 @@
 # Armature2JSON: writes FLVER node JSON from a Blender armature
 
+# Blender reloads only this package when the add-on is reinstalled or
+# re-enabled; reload its modules too (dependencies first), so their new code runs
+if "bpy" in locals():
+    import importlib
+    from . import core, operators, prefs, ui
+    from .core import (bounds, files, hierarchy, i18n_zh_hans, merge, messages,
+                       orientations, transforms, writer)
+    from .operators import export_operator, match_operator
+    from .ui import panel
+    for _module in (messages, files, hierarchy, transforms, bounds, merge,
+                    writer, orientations, i18n_zh_hans, core, prefs, export_operator,
+                    match_operator, operators, panel, ui):
+        importlib.reload(_module)
+    del _module
+
 import bpy
 from bpy.props import EnumProperty, StringProperty
 
@@ -17,15 +32,26 @@ _MODE_ITEMS = [
      "and add the armature's bones that it lacks"),
 ]
 
+# Coordinate Space: how Blender coordinates become FS (FLVER) coordinates
+_SPACE_ITEMS = [
+    ('BLENDER_WORLD', "Blender World (Convert to FS)",
+     "The armature as it stands in Blender's world, Z up, including its object and parent "
+     "transforms. It's converted to FS space: turned Y up and mirrored on Z. For armatures "
+     "that stand upright in Blender, such as those from the FLVER importer"),
+    ('ARMATURE', "Armature Space = FS Space",
+     "The armature's own coordinates are already FS coordinates and are written unchanged, "
+     "with no conversion or mirroring; the object's transform is ignored"),
+]
+
 _REPARENT_ITEMS = [
     (merge.KEEP_INPUT, "Keep Reference Parent",
      "Keep the reference JSON's parent and values. The bone stays where it was"),
     (merge.BLENDER_KEEP_PLACEMENT, "Use Blender Parent, Keep Placement",
      "Use the Blender parent and recompute the bone's values, so it stays where it "
      "was, axes included"),
-    (merge.BLENDER_AS_IS, "Use Blender Parent, Keep Values (1.0.0)",
-     "Use the Blender parent but keep the values relative to the old parent, "
-     "as Armature2JSON 1.0.0 did. The bone can move"),
+    (merge.BLENDER_AS_IS, "Use Blender Parent, Keep Values",
+     "Use the Blender parent but keep the values relative to the old parent. "
+     "The bone can move"),
 ]
 
 classes = (
@@ -58,6 +84,14 @@ def register_properties():
         items=_REPARENT_ITEMS,
         default=merge.KEEP_INPUT,
     )
+    bpy.types.Scene.armature2json_space = EnumProperty(
+        name="Coordinate Space",
+        description="How Blender coordinates become FS (FLVER) coordinates. FS space is the "
+                    "game's: Y up, the character faces -Z, its left is +X. Pick the one that "
+                    "matches how the armature got into Blender",
+        items=_SPACE_ITEMS,
+        default=transforms.DEFAULT_SPACE,
+    )
     bpy.types.Scene.armature2json_length_axis = EnumProperty(
         name="Length Axis",
         description="Node axis that runs along each bone. Vanilla skeletons use the X axis",
@@ -78,6 +112,7 @@ def unregister_properties():
     del bpy.types.Scene.armature2json_mode
     del bpy.types.Scene.armature2json_input_path
     del bpy.types.Scene.armature2json_reparent
+    del bpy.types.Scene.armature2json_space
     del bpy.types.Scene.armature2json_length_axis
     del bpy.types.Scene.armature2json_roll_axis
 

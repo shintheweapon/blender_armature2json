@@ -3,7 +3,7 @@
 schema_version = "1.0.0"
 
 id = "armature2json"
-version = "2.0.0"
+version = "2.2.0"
 name = "Armature2JSON"
 tagline = "Export a Blender armature as FLVER node JSON for FLVER_Editor"
 maintainer = "shintheweapon"

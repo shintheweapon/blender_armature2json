@@ -8,7 +8,7 @@ from bpy.props import StringProperty
 from bpy_extras.io_utils import ExportHelper
 
 from .. import prefs
-from ..core import files, messages, writer
+from ..core import files, messages, transforms, writer
 
 # Names shown in a report message before the rest go to the system console
 REPORT_NAMES = 5
@@ -55,9 +55,13 @@ def draw_options(layout: bpy.types.UILayout, context: bpy.types.Context) -> None
         col = layout.column(align=True)
         col.prop(scene, "armature2json_input_path")
         col.prop(scene, "armature2json_reparent")
+    layout.prop(scene, "armature2json_space")
     col = layout.column(align=True)
     col.prop(scene, "armature2json_length_axis")
     col.prop(scene, "armature2json_roll_axis")
+    row = col.row(align=True)
+    row.operator(ARMATURE2JSON_OT_reset_axes.bl_idname, icon='LOOP_BACK')
+    row.operator(ARMATURE2JSON_OT_axes_as_imported.bl_idname)
     options = prefs.get(context)
     if not merging and options is not None:
         layout.prop(options, "mark_root_as_mesh")
@@ -154,6 +158,7 @@ class ARMATURE2JSON_OT_export(bpy.types.Operator, ExportHelper):
                 length_axis=scene.armature2json_length_axis,
                 roll_axis=scene.armature2json_roll_axis,
                 mark_root_as_mesh=prefs.mark_root_as_mesh(context),
+                space=scene.armature2json_space,
             )
             writer.write_nodes(self.filepath, nodes)
         except ValueError as error:
@@ -190,6 +195,7 @@ class ARMATURE2JSON_OT_export(bpy.types.Operator, ExportHelper):
                 length_axis=scene.armature2json_length_axis,
                 roll_axis=scene.armature2json_roll_axis,
                 reparent=scene.armature2json_reparent,
+                space=scene.armature2json_space,
             )
             writer.write_nodes(self.filepath, nodes)
         except ValueError as error:
@@ -209,6 +215,32 @@ class ARMATURE2JSON_OT_export(bpy.types.Operator, ExportHelper):
         return {'FINISHED'}
 
 
+class ARMATURE2JSON_OT_reset_axes(bpy.types.Operator):
+    """Length X, Roll -Z (default). In game, each bone gets vanilla-style axes worked out from its Blender direction. Can disagree with a custom Havok skeleton"""
+    bl_idname = "armature2json.reset_axes"
+    bl_label = "Reset Axes"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        scene = context.scene
+        scene.armature2json_length_axis = transforms.DEFAULT_LENGTH_AXIS
+        scene.armature2json_roll_axis = transforms.DEFAULT_ROLL_AXIS
+        return {'FINISHED'}
+
+
+class ARMATURE2JSON_OT_axes_as_imported(bpy.types.Operator):
+    """Length Y, Roll Z. In game, each bone keeps exactly its Blender axes, the same axes a custom Havok skeleton gets. Use after Match Vanilla Orientations"""
+    bl_idname = "armature2json.axes_as_imported"
+    bl_label = "As Imported"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        scene = context.scene
+        scene.armature2json_length_axis = 'Y'
+        scene.armature2json_roll_axis = 'Z'
+        return {'FINISHED'}
+
+
 def menu_func_export(self, context):
     """Add the exporter to File > Export."""
     self.layout.operator(ARMATURE2JSON_OT_export.bl_idname,
@@ -217,4 +249,6 @@ def menu_func_export(self, context):
 
 classes = (
     ARMATURE2JSON_OT_export,
+    ARMATURE2JSON_OT_reset_axes,
+    ARMATURE2JSON_OT_axes_as_imported,
 )

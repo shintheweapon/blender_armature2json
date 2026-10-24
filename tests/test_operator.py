@@ -160,6 +160,20 @@ class ExportOperatorTests(unittest.TestCase):
         self.assertEqual(properties['armature2json_mode'].default, 'ARMATURE')
         self.assertEqual(properties['armature2json_reparent'].default, 'KEEP_INPUT')
 
+    def test_reset_axes_restores_the_defaults(self):
+        scene = bpy.context.scene
+        scene.armature2json_length_axis = 'Y'
+        scene.armature2json_roll_axis = 'Z'
+        self.assertEqual(bpy.ops.armature2json.reset_axes(), {'FINISHED'})
+        self.assertEqual(scene.armature2json_length_axis, 'X')
+        self.assertEqual(scene.armature2json_roll_axis, '-Z')
+
+    def test_reset_axes_registered_with_a_tooltip(self):
+        operator = bpy.types.ARMATURE2JSON_OT_reset_axes
+        self.assertEqual(operator.bl_label, "Reset Axes")
+        self.assertTrue(operator.__doc__)
+        self.assertIn('UNDO', operator.bl_options)
+
     def test_operator_unavailable_without_armature(self):
         self.assertFalse(bpy.ops.armature2json.export.poll())
 
@@ -185,14 +199,15 @@ class MarkRootPreferenceTests(unittest.TestCase):
         add_preferences_entry(self).mark_root_as_mesh = True
         self.assertEqual(export_flags(self), [12, 8])
 
-    def test_without_preferences_the_default_is_on(self):
+    def test_without_preferences_the_default_is_off(self):
         from src import prefs
         self.assertIsNone(prefs.get(bpy.context))
-        self.assertTrue(prefs.mark_root_as_mesh(bpy.context))
-        self.assertEqual(export_flags(self), [12, 8])
+        self.assertFalse(prefs.mark_root_as_mesh(bpy.context))
+        self.assertEqual(export_flags(self), [8, 8])
 
     def test_scene_no_longer_has_the_option(self):
         self.assertNotIn('armature2json_mark_root_as_mesh', bpy.types.Scene.bl_rna.properties.keys())
+
 
 if __name__ == '__main__':
     unittest.main()

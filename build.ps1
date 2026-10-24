@@ -9,7 +9,9 @@
     The zip is named <id>-<version>.zip from src\blender_manifest.toml.
 
 .PARAMETER Blender
-    Path to blender.exe (Blender 4.2 or later).
+    Path to blender.exe (Blender 4.2 or later). Without it, the first
+    non-empty line of build.local.txt next to this script is used. That file
+    is git-ignored, so a machine's own path stays out of the repository.
 
 .EXAMPLE
     .\build.ps1
@@ -18,7 +20,7 @@
     .\build.ps1 -Blender "C:\Program Files\Blender Foundation\Blender 4.5\blender.exe"
 #>
 param(
-    [string]$Blender = 'blender.exe'
+    [string]$Blender
 )
 
 $ErrorActionPreference = 'Stop'
@@ -26,10 +28,22 @@ $ErrorActionPreference = 'Stop'
 $sourceDir = Join-Path $PSScriptRoot 'src'
 $distDir = Join-Path $PSScriptRoot 'dist'
 $manifestPath = Join-Path $sourceDir 'blender_manifest.toml'
+$localConfig = Join-Path $PSScriptRoot 'build.local.txt'
 
+if (-not $Blender -and (Test-Path -LiteralPath $localConfig -PathType Leaf)) {
+    $Blender = Get-Content -LiteralPath $localConfig |
+        ForEach-Object { $_.Trim().Trim('"') } |
+        Where-Object { $_ } |
+        Select-Object -First 1
+}
+if (-not $Blender) {
+    Write-Host 'No Blender path given.' -ForegroundColor Red
+    Write-Host 'Pass -Blender "<path to blender.exe>", or put the path to blender.exe in build.local.txt.'
+    exit 1
+}
 if (-not (Test-Path -LiteralPath $Blender -PathType Leaf)) {
     Write-Host "Blender not found at: $Blender" -ForegroundColor Red
-    Write-Host 'Pass its location with -Blender "<path to blender.exe>".'
+    Write-Host 'Pass its location with -Blender "<path to blender.exe>", or fix build.local.txt.'
     exit 1
 }
 

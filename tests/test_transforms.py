@@ -107,8 +107,8 @@ class NodeMatrixTests(unittest.TestCase):
     def test_upright_bone_points_up_in_flver_space(self):
         arm = helpers.make_armature([('Root', None, (0.5, 0.2, 1.0), (0.5, 0.2, 2.0), 0.0)])
         bone = arm.data.bones['Root']
-        node = transforms.node_matrix(arm.matrix_world, bone.matrix_local,
-                                      transforms.axis_matrix())
+        node = transforms.node_matrix(transforms.space_mapping('BLENDER_WORLD', arm.matrix_world), arm.matrix_world,
+                                      bone.matrix_local, transforms.axis_matrix())
         # Blender (x, y, z) lands at FLVER (x, z, y): Y-up, then Z mirrored
         assert_vectors_close(self, node.translation, (0.5, 1.0, 0.2))
         assert_vectors_close(self, node.col[0].xyz, (0, 1, 0))
@@ -120,8 +120,8 @@ class NodeMatrixTests(unittest.TestCase):
         arm.rotation_euler = (math.pi / 2, 0, 0)
         bpy_update()
         bone = arm.data.bones['Root']
-        node = transforms.node_matrix(arm.matrix_world, bone.matrix_local,
-                                      transforms.axis_matrix())
+        node = transforms.node_matrix(transforms.space_mapping('BLENDER_WORLD', arm.matrix_world), arm.matrix_world,
+                                      bone.matrix_local, transforms.axis_matrix())
         assert_vectors_close(self, node.col[0].xyz, (0, 1, 0))
 
     def test_child_offset_lies_on_length_axis(self):
@@ -130,12 +130,55 @@ class NodeMatrixTests(unittest.TestCase):
             ('Child', 'Parent', (0, 0, 1), (0, 0, 2), 0.0),
         ])
         axes = transforms.axis_matrix()
-        parent = transforms.node_matrix(arm.matrix_world, arm.data.bones['Parent'].matrix_local, axes)
-        child = transforms.node_matrix(arm.matrix_world, arm.data.bones['Child'].matrix_local, axes)
+        world = transforms.space_mapping('BLENDER_WORLD', arm.matrix_world)
+        parent = transforms.node_matrix(world, arm.matrix_world,
+                                        arm.data.bones['Parent'].matrix_local, axes)
+        child = transforms.node_matrix(world, arm.matrix_world,
+                                       arm.data.bones['Child'].matrix_local, axes)
         translation, rotation, scale = transforms.local_trs(parent, child)
         assert_vectors_close(self, translation, (1, 0, 0))
         assert_vectors_close(self, rotation, (0, 0, 0))
         assert_vectors_close(self, scale, (1, 1, 1))
+
+
+class SpaceTests(unittest.TestCase):
+
+    def setUp(self):
+        helpers.new_scene()
+
+    def test_armature_space_is_the_bone_matrix_with_the_axes(self):
+        arm = helpers.make_armature([('Root', None, (0.1, 0.9, -0.2), (0.4, 1.3, 0.1), 0.7)])
+        arm.rotation_euler = (0.4, -1.1, 2.0)
+        arm.location = (3.0, -2.0, 1.0)
+        bpy_update()
+        bone = arm.data.bones['Root']
+        axes = transforms.axis_matrix('Y', 'Z')
+        space = transforms.space_mapping('ARMATURE', arm.matrix_world)
+        node = transforms.node_matrix(space, arm.matrix_world, bone.matrix_local, axes)
+        expected = bone.matrix_local @ axes
+        for row, row_expected in zip(node, expected):
+            assert_vectors_close(self, row, row_expected)
+
+    def test_armature_space_points_are_in_the_armature_space(self):
+        world = Matrix.Translation((1.0, 2.0, 3.0)) @ Euler((0.3, 0.2, 0.1)).to_matrix().to_4x4()
+        space = transforms.space_mapping('ARMATURE', world)
+        point = Vector((0.5, -0.25, 2.0))
+        assert_vectors_close(self, transforms.point_to_flver(space, world, point), point)
+
+    def test_blender_world_is_the_previous_mapping(self):
+        world = Euler((math.pi / 2, 0.0, 0.3)).to_matrix().to_4x4()
+        bone = Matrix.Translation((0.1, 0.2, 0.3)) @ Euler((0.5, -0.4, 1.0)).to_matrix().to_4x4()
+        axes = transforms.axis_matrix()
+        space = transforms.space_mapping('BLENDER_WORLD', world)
+        node = transforms.node_matrix(space, world, bone, axes)
+        expected = (transforms.MIRROR_Z @ transforms.Y_UP @ world @ bone
+                    @ transforms.MIRROR_Z @ axes)
+        for row, row_expected in zip(node, expected):
+            assert_vectors_close(self, row, row_expected)
+
+    def test_unknown_space_raises(self):
+        with self.assertRaises(ValueError):
+            transforms.space_mapping('SIDEWAYS', Matrix.Identity(4))
 
 
 def bpy_update():

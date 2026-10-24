@@ -5,6 +5,7 @@ import json
 from typing import Dict, Iterable, List, Tuple
 
 import bpy
+from mathutils import Matrix
 
 from . import bounds, files, hierarchy, merge, messages, transforms
 from .messages import ExportError
@@ -53,7 +54,8 @@ def _xyz(vector: Iterable[float]) -> Dict[str, float]:
 def build_nodes(armature_obj: bpy.types.Object,
                 length_axis: str = transforms.DEFAULT_LENGTH_AXIS,
                 roll_axis: str = transforms.DEFAULT_ROLL_AXIS,
-                mark_root_as_mesh: bool = True) -> List[dict]:
+                mark_root_as_mesh: bool = False,
+                space: str = transforms.DEFAULT_SPACE) -> List[dict]:
     """
     Build the FLVER node list for an armature.
 
@@ -67,6 +69,9 @@ def build_nodes(armature_obj: bpy.types.Object,
         Node axis that each bone's Z axis becomes, one of ``transforms.AXES``.
     mark_root_as_mesh : bool
         Write node 0 with Flags 12 (Mesh and Bone) instead of 8 (Bone).
+    space : str
+        Coordinate Space, one of ``transforms.SPACES``: how Blender
+        coordinates become FLVER coordinates.
 
     Returns
     -------
@@ -76,8 +81,8 @@ def build_nodes(armature_obj: bpy.types.Object,
     Raises
     ------
     ValueError
-        If the object is not an armature, has no bones, or the axes are
-        invalid.
+        If the object is not an armature, has no bones, or the axes or the
+        space are invalid.
     """
     if armature_obj is None or armature_obj.type != 'ARMATURE':
         raise ExportError(messages.NO_ARMATURE)
@@ -86,14 +91,15 @@ def build_nodes(armature_obj: bpy.types.Object,
         raise ExportError(messages.NO_BONES, name=armature_obj.name)
 
     axes = transforms.axis_matrix(length_axis, roll_axis)
+    mapping = transforms.space_mapping(space, armature_obj.matrix_world)
     index_of = {bone.name: i for i, bone in enumerate(bones)}
     parents = [index_of[b.parent.name] if b.parent else -1 for b in bones]
     links = hierarchy.link_indices(parents)
-    matrices = [transforms.node_matrix(armature_obj.matrix_world,
+    matrices = [transforms.node_matrix(mapping, armature_obj.matrix_world,
                                        bone.matrix_local, axes)
                 for bone in bones]
     points = bounds.weighted_points(bounds.skinned_meshes(armature_obj),
-                                    index_of.keys())
+                                    index_of.keys(), mapping)
 
     nodes = []
     for i, bone in enumerate(bones):
@@ -125,7 +131,8 @@ def merge_nodes(armature_obj: bpy.types.Object,
                 input_nodes: List[dict],
                 length_axis: str = transforms.DEFAULT_LENGTH_AXIS,
                 roll_axis: str = transforms.DEFAULT_ROLL_AXIS,
-                reparent: str = merge.KEEP_INPUT) -> Tuple[List[dict], merge.MergePlan]:
+                reparent: str = merge.KEEP_INPUT,
+                space: str = transforms.DEFAULT_SPACE) -> Tuple[List[dict], merge.MergePlan]:
     """
     Merge an armature's bones into a reference node list.
 
@@ -148,6 +155,8 @@ def merge_nodes(armature_obj: bpy.types.Object,
         Node axis that each added bone's Z axis becomes.
     reparent : str
         One of ``merge.REPARENT_CHOICES``.
+    space : str
+        Coordinate Space for the added bones, one of ``transforms.SPACES``.
 
     Returns
     -------
@@ -159,7 +168,8 @@ def merge_nodes(armature_obj: bpy.types.Object,
     ------
     ValueError
         If the object is not an armature, has no bones, the reference is invalid,
-        the axes are invalid, or a node would come before its parent.
+        the axes or the space are invalid, or a node would come before its
+        parent.
     """
     if armature_obj is None or armature_obj.type != 'ARMATURE':
         raise ExportError(messages.NO_ARMATURE)
@@ -171,8 +181,10 @@ def merge_nodes(armature_obj: bpy.types.Object,
         reparent)
 
     axes = transforms.axis_matrix(length_axis, roll_axis)
+    mapping = transforms.space_mapping(space, armature_obj.matrix_world)
     bone_by_name = {bone.name: bone for bone in bones}
-    points = bounds.weighted_points(bounds.skinned_meshes(armature_obj), plan.added)
+    points = bounds.weighted_points(bounds.skinned_meshes(armature_obj), plan.added,
+                                    mapping)
     input_worlds = transforms.world_matrices(input_nodes)
     recompute = set(plan.recompute)
 
@@ -182,7 +194,7 @@ def merge_nodes(armature_obj: bpy.types.Object,
         parent = plan.parents[i]
         parent_world = worlds[parent] if parent >= 0 else None
         if kind == 'added':
-            world = transforms.node_matrix(armature_obj.matrix_world,
+            world = transforms.node_matrix(mapping, armature_obj.matrix_world,
                                            bone_by_name[ref].matrix_local, axes)
             translation, rotation, scale = transforms.local_trs(parent_world, world)
             box_min, box_max = bounds.bounding_box(world, points.get(ref, []))
