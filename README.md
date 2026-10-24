@@ -15,7 +15,7 @@ Version 2.0.0 is a rewrite of Armature2JSON 1.0.0: new maths, the From Armature 
    .\build.ps1
    ```
 
-   It runs Blender's own extension build, writes `dist\armature2json-2.2.0.zip` (the name follows `id` and `version` in `src\blender_manifest.toml`), and checks that the zip installs cleanly. If Blender lives elsewhere, pass its path: `.\build.ps1 -Blender "<path to blender.exe>"`. On a machine whose execution policy blocks scripts, run `powershell -ExecutionPolicy Bypass -File build.ps1` instead.
+   It runs Blender's own extension build, writes `dist\armature2json-2.2.0.zip` (the name follows `id` and `version` in `src\blender_manifest.toml`), and checks that the zip installs cleanly. It needs the path to your blender.exe: pass it with `.\build.ps1 -Blender "<path to blender.exe>"`, or put it on the first line of `build.local.txt` next to `build.ps1` (git-ignored, so the path stays on your machine). On a machine whose execution policy blocks scripts, run `powershell -ExecutionPolicy Bypass -File build.ps1` instead.
 2. In Blender: Edit > Preferences > Get Extensions, open the menu at the top right, choose "Install from Disk" and pick the zip.
 
 Without the script, zip the contents of the `src` folder by hand (not the folder itself, and without the `__pycache__` folders), so that `blender_manifest.toml` sits at the top of the zip.
@@ -176,7 +176,7 @@ uv run pytest
 
 ### Tests in Blender
 
-Run the full test suite inside Blender 4.5. It includes `tests/unit`, and it switches Blender's interface to English for the run (preferences are not saved), because the tests check English messages:
+Run the full test suite inside Blender 4.5 (in the commands below, `blender.exe` stands for the path to your blender.exe). It includes `tests/unit`, and it switches Blender's interface to English for the run (preferences are not saved), because the tests check English messages:
 
 ```
 "blender.exe" -b -P tests\run_tests.py
@@ -186,6 +186,12 @@ Compare the output with a vanilla node JSON saved next to a sample `.blend` unde
 
 ```
 "blender.exe" -b sample.blend -P tests\check_samples.py
+```
+
+For a JSON under another name, pass its path after `--`:
+
+```
+"blender.exe" -b sample.blend -P tests\check_samples.py -- "reference.json"
 ```
 
 The check passes when names and parents match, joint positions match within 1e-4, and every box, turned into the vanilla node's axes, matches within 1e-4. It also lists which core bones get their vanilla axes.

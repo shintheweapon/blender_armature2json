@@ -2,8 +2,9 @@
 *.blend
 *.blend1
 
-# Personal working rules
+# Personal working rules, and this machine's Blender path for build.ps1
 rules.md
+build.local.txt
 
 # Python and build output
 dist/

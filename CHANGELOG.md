@@ -26,6 +26,9 @@
 ### Changed
 - **Mark Root as Mesh Node** is off by default. Blender keeps a choice you made before, since it stores a preference
   only once it has been set.
+- `build.ps1` has no built-in Blender path: pass `-Blender`, or put the path on the first line of `build.local.txt`
+  (git-ignored).
+- `tests/check_samples.py` takes the reference JSON's path after `--`; without it, it still reads `<blend>.json`.
 - Version 2.2.0 (`src/blender_manifest.toml`, `pyproject.toml`, `uv.lock`).
 
 ## 2.0.0

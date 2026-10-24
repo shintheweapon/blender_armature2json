@@ -1,7 +1,9 @@
-# Compares the exporter's output on a sample .blend with the vanilla node JSON
-# saved next to it (same file name, .json), in both modes: From Armature, and
-# Merge into Reference JSON with some leaf nodes dropped. Run inside Blender:
+# Compares the exporter's output on a sample .blend with a vanilla node JSON,
+# in both modes: From Armature, and Merge into Reference JSON with some leaf
+# nodes dropped. Run inside Blender, with the JSON saved next to the .blend
+# under the same name, or with its path after --:
 #   blender.exe -b sample.blend -P tests/check_samples.py
+#   blender.exe -b sample.blend -P tests/check_samples.py -- reference.json
 
 import json
 import math
@@ -158,6 +160,30 @@ def merge_check(armature_obj: bpy.types.Object, vanilla: List[dict], name: str) 
     return [f'merge: {failure}' for failure in failures]
 
 
+def reference_path(blend_path: str, argv: List[str]) -> str:
+    """
+    Find the vanilla node JSON to compare with.
+
+    Parameters
+    ----------
+    blend_path : str
+        Path of the open sample .blend.
+    argv : list of str
+        Blender's command line; arguments after ``--`` are the script's own.
+
+    Returns
+    -------
+    str
+        The first argument after ``--``, made absolute against the current
+        folder; without one, the .blend's path with the extension .json.
+    """
+    if '--' in argv:
+        args = argv[argv.index('--') + 1:]
+        if args:
+            return os.path.abspath(args[0])
+    return os.path.splitext(blend_path)[0] + '.json'
+
+
 def main() -> int:
     """
     Run the comparison and print a report.
@@ -168,7 +194,11 @@ def main() -> int:
         0 when every hard check passes, otherwise 1.
     """
     blend_path = bpy.data.filepath
-    json_path = os.path.splitext(blend_path)[0] + '.json'
+    json_path = reference_path(blend_path, sys.argv)
+    if not os.path.isfile(json_path):
+        print(f'CHECK {os.path.basename(blend_path)}: FAIL no reference JSON at {json_path}; '
+              f'pass its path after --')
+        return 1
     with open(json_path, encoding='utf-8') as handle:
         vanilla = json.load(handle)
 
