@@ -1,14 +1,14 @@
 # Changelog
 
-## 2.2.0 (unreleased)
+## 2.2.0
 
 2.1.0 was never published; its changes are part of 2.2.0.
 
 ### Added
 - **Coordinate Space** option (sidebar panel and export dialog, kept per .blend file): **Blender World (Convert to FS)**,
   the default and the behaviour so far, or **Armature Space = FS Space**, which writes the armature's own coordinates
-  unchanged, as Armature2JSON 1.0.0 read them. An FBX import that lies on its back
-  in Blender exported lying down with Blender World. Applies to both modes and to the bounding boxes.
+  unchanged, as Armature2JSON 1.0.0 read them. An FBX import that lies on its back in Blender exported lying down
+  with Blender World. Applies to both modes and to the bounding boxes.
 - **Match Vanilla Orientations** (top of the sidebar panel): turns the armature's bones that have vanilla names to the
   axes of the vanilla character skeleton, read from the **Vanilla Reference JSON** (c0000's Nodes.json, an add-on
   preference so its path is remembered), keeping each bone's head and length. It uses the Coordinate Space and axis
