@@ -86,7 +86,7 @@ class MergeNodesTests(unittest.TestCase):
                          by_name(self.full)['Cloth']['BoundingBoxMax'])
 
     def _reparented_input(self):
-        # README example: the input has Hand under Forearm; in Blender, Hand
+        # docs/DETAILS.md example: the input has Hand under Forearm; in Blender, Hand
         # is moved under UpperArm
         partial = copy.deepcopy(self.full)
         bpy.context.view_layer.objects.active = self.arm
