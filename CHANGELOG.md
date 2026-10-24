@@ -7,7 +7,7 @@
 ### Added
 - **Coordinate Space** option (sidebar panel and export dialog, kept per .blend file): **Blender World (Convert to FS)**,
   the default and the behaviour so far, or **Armature Space = FS Space**, which writes the armature's own coordinates
-  unchanged, as Tlarok's script, FLVER Bones Adder and Armature2JSON 1.0.0 read them. An FBX import that lies on its back
+  unchanged, as Armature2JSON 1.0.0 read them. An FBX import that lies on its back
   in Blender exported lying down with Blender World. Applies to both modes and to the bounding boxes.
 - **Match Vanilla Orientations** (top of the sidebar panel): turns the armature's bones that have vanilla names to the
   axes of the vanilla character skeleton, read from the **Vanilla Reference JSON** (c0000's Nodes.json, an add-on
@@ -26,6 +26,8 @@
 ### Changed
 - **Mark Root as Mesh Node** is off by default. Blender keeps a choice you made before, since it stores a preference
   only once it has been set.
+- The Merge choice **Use Blender Parent, Keep Values (1.0.0)** is now called **Use Blender Parent, Keep Values**; it
+  works as before.
 - `build.ps1` has no built-in Blender path: pass `-Blender`, or put the path on the first line of `build.local.txt`
   (git-ignored).
 - `tests/check_samples.py` takes the reference JSON's path after `--`; without it, it still reads `<blend>.json`.

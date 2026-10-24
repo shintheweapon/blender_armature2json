@@ -40,8 +40,7 @@ _SPACE_ITEMS = [
      "that stand upright in Blender, such as those from the FLVER importer"),
     ('ARMATURE', "Armature Space = FS Space",
      "The armature's own coordinates are already FS coordinates and are written unchanged, "
-     "with no conversion or mirroring; the object's transform is ignored. Tlarok's script and "
-     "FLVER Bones Adder read armatures this way"),
+     "with no conversion or mirroring; the object's transform is ignored"),
 ]
 
 _REPARENT_ITEMS = [
@@ -50,9 +49,9 @@ _REPARENT_ITEMS = [
     (merge.BLENDER_KEEP_PLACEMENT, "Use Blender Parent, Keep Placement",
      "Use the Blender parent and recompute the bone's values, so it stays where it "
      "was, axes included"),
-    (merge.BLENDER_AS_IS, "Use Blender Parent, Keep Values (1.0.0)",
-     "Use the Blender parent but keep the values relative to the old parent, "
-     "as Armature2JSON 1.0.0 did. The bone can move"),
+    (merge.BLENDER_AS_IS, "Use Blender Parent, Keep Values",
+     "Use the Blender parent but keep the values relative to the old parent. "
+     "The bone can move"),
 ]
 
 classes = (
