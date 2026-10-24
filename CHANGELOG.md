@@ -28,6 +28,7 @@
   only once it has been set.
 - The Merge choice **Use Blender Parent, Keep Values (1.0.0)** is now called **Use Blender Parent, Keep Values**; it
   works as before.
+- README shortened to installing and using the add-on; the details moved to `docs/DETAILS.md`.
 - `build.ps1` has no built-in Blender path: pass `-Blender`, or put the path on the first line of `build.local.txt`
   (git-ignored).
 - `tests/check_samples.py` takes the reference JSON's path after `--`; without it, it still reads `<blend>.json`.
